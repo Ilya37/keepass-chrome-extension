@@ -31,7 +31,9 @@ export default defineConfig({
   modules: ['@wxt-dev/module-react'],
   manifest: {
     name: 'KeePass Password Manager',
-    description: 'KeePass-compatible password manager for Chrome',
+    description:
+      'KeePass-compatible password manager. All data is encrypted locally — nothing leaves your browser.',
+    homepage_url: 'https://github.com/Ilya37/keepass-chrome-extension',
     permissions: ['storage', 'activeTab', 'clipboardWrite', 'alarms'],
     content_security_policy: {
       extension_pages: "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'",
