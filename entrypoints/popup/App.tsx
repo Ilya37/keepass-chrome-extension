@@ -108,40 +108,43 @@ function App() {
       const buffer = new Uint8Array(res.data);
       console.log('[Export] Buffer created:', buffer.length, 'bytes');
 
-      const blob = new Blob([buffer], { type: 'application/octet-stream' });
-      console.log('[Export] Blob created:', blob.size, 'bytes');
-
-      const url = URL.createObjectURL(blob);
-      console.log('[Export] Blob URL created:', url);
+      // Convert to base64 for data URL
+      let binary = '';
+      for (let i = 0; i < buffer.length; i++) {
+        binary += String.fromCharCode(buffer[i]);
+      }
+      const base64 = btoa(binary);
+      console.log('[Export] Base64 encoded');
 
       const filename = `keepass-export-${new Date().toISOString().split('T')[0]}.kdbx`;
       console.log('[Export] Filename:', filename);
 
+      const dataUrl = `data:application/octet-stream;base64,${base64}`;
+      console.log('[Export] Data URL created, length:', dataUrl.length);
+
       const link = document.createElement('a');
-      link.href = url;
+      link.href = dataUrl;
       link.download = filename;
       link.style.display = 'none';
 
       console.log('[Export] Appending link to body');
       document.body.appendChild(link);
 
-      console.log('[Export] Clicking link');
+      console.log('[Export] Clicking link to trigger download');
       link.click();
 
       // Don't close popup immediately - give Chrome time to process download
-      // Wait before cleanup to ensure download is queued
-      console.log('[Export] Link clicked, waiting 1s before cleanup (popup will stay open)');
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      console.log('[Export] Waiting 500ms before cleanup');
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
       try {
         document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-        console.log('[Export] Cleanup complete');
+        console.log('[Export] Link removed from body');
       } catch (cleanupErr) {
         console.error('[Export] Cleanup error:', cleanupErr);
       }
 
-      console.log('[Export] Export completed successfully - file should be in Downloads');
+      console.log('[Export] Export completed - file should be in Downloads');
     } catch (err) {
       console.error('[Export] Export error:', err);
       alert('Export error: ' + (err instanceof Error ? err.message : String(err)));
