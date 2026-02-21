@@ -88,30 +88,61 @@ function App() {
 
   const handleExportDatabase = async () => {
     try {
+      console.log('[Export] Starting export...');
       const res = await sendMessage<ExportResponse>({ type: 'EXPORT_DATABASE' });
+      console.log('[Export] Response:', { success: res.success, hasData: !!res.data, dataLength: res.data?.length });
 
-      if (!res.success || !res.data) {
-        console.error('[App] Export failed');
+      if (!res.success) {
+        console.error('[Export] Export failed: success=false');
+        alert('Export failed');
         return;
       }
 
+      if (!res.data || res.data.length === 0) {
+        console.error('[Export] Export failed: no data');
+        alert('Export failed: no data');
+        return;
+      }
+
+      console.log('[Export] Creating Uint8Array from', res.data.length, 'bytes');
       const buffer = new Uint8Array(res.data);
+      console.log('[Export] Buffer created:', buffer.length, 'bytes');
+
       const blob = new Blob([buffer], { type: 'application/octet-stream' });
+      console.log('[Export] Blob created:', blob.size, 'bytes');
+
       const url = URL.createObjectURL(blob);
+      console.log('[Export] Blob URL created:', url);
+
+      const filename = `keepass-export-${new Date().toISOString().split('T')[0]}.kdbx`;
+      console.log('[Export] Filename:', filename);
 
       const link = document.createElement('a');
       link.href = url;
-      link.download = `keepass-export-${new Date().toISOString().split('T')[0]}.kdbx`;
+      link.download = filename;
+      link.style.display = 'none';
 
+      console.log('[Export] Appending link to body');
       document.body.appendChild(link);
+
+      console.log('[Export] Clicking link');
       link.click();
 
+      console.log('[Export] Link clicked, cleaning up in 200ms');
       setTimeout(() => {
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-      }, 100);
+        try {
+          document.body.removeChild(link);
+          URL.revokeObjectURL(url);
+          console.log('[Export] Cleanup complete');
+        } catch (cleanupErr) {
+          console.error('[Export] Cleanup error:', cleanupErr);
+        }
+      }, 200);
+
+      console.log('[Export] Export completed successfully');
     } catch (err) {
-      console.error('[App] Export error:', err);
+      console.error('[Export] Export error:', err);
+      alert('Export error: ' + (err instanceof Error ? err.message : String(err)));
     }
   };
 
