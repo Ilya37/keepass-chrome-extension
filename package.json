@@ -12,6 +12,8 @@
     "zip": "wxt zip",
     "zip:firefox": "wxt zip -b firefox",
     "compile": "tsc --noEmit",
+    "test": "vitest run tests/",
+    "test:watch": "vitest tests/",
     "postinstall": "wxt prepare"
   },
   "dependencies": {
@@ -23,10 +25,15 @@
     "tailwindcss": "^4.1.18"
   },
   "devDependencies": {
+    "@testing-library/react": "^16.3.2",
     "@types/react": "^19.2.13",
     "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.1.4",
     "@wxt-dev/module-react": "^1.1.5",
+    "jsdom": "^28.1.0",
+    "sharp": "^0.34.5",
     "typescript": "^5.9.3",
+    "vitest": "^4.0.18",
     "wxt": "^0.20.15"
   }
 }

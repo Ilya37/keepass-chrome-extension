@@ -424,6 +424,33 @@ export default defineBackground(() => {
           return { success: true, data: exportArr } as ExportResponse;
         }
 
+        case 'DOWNLOAD_EXPORT': {
+          try {
+            const { data, filename } = msg.payload;
+            const buffer = new Uint8Array(data);
+
+            // Convert to base64 for data URL
+            let binary = '';
+            for (let i = 0; i < buffer.byteLength; i++) {
+              binary += String.fromCharCode(buffer[i]);
+            }
+            const base64 = btoa(binary);
+            const dataUrl = `data:application/octet-stream;base64,${base64}`;
+
+            // Use Chrome downloads API with data URL
+            await browser.downloads.download({
+              url: dataUrl,
+              filename,
+              saveAs: false,
+            });
+
+            return { success: true };
+          } catch (err) {
+            console.error('Download failed:', err);
+            throw err;
+          }
+        }
+
         case 'GET_ENTRIES_FOR_URL': {
           if (!kdbx.isUnlocked()) {
             // Try auto-unlock silently for content script

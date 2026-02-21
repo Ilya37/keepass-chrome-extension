@@ -1,0 +1,24 @@
+<svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Тень для глубины -->
+    <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-opacity="0.3" flood-color="#000000"/>
+    </filter>
+  </defs>
+
+  <!-- Скругленный квадрат с тенью (фон) -->
+  <rect x="20" y="20" width="216" height="216" rx="40" ry="40"
+        fill="#34A853" filter="url(#shadow)"/>
+
+  <!-- Замочек (белый) -->
+  <g fill="none" stroke="white" stroke-width="14" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Верхняя часть замочка (дуга) -->
+    <path d="M 95 125 A 30 30 0 0 1 161 125" />
+
+    <!-- Корпус замочка -->
+    <rect x="82" y="125" width="92" height="85" rx="8" ry="8"/>
+
+    <!-- Скважина замочка -->
+    <circle cx="128" cy="155" r="8" fill="white" stroke="none"/>
+  </g>
+</svg>

@@ -95,21 +95,13 @@ function App() {
         return;
       }
 
-      const buffer = new Uint8Array(res.data);
-      const blob = new Blob([buffer], { type: 'application/octet-stream' });
-      const url = URL.createObjectURL(blob);
+      const filename = `keepass-export-${new Date().toISOString().split('T')[0]}.kdbx`;
 
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `keepass-export-${new Date().toISOString().split('T')[0]}.kdbx`;
-
-      document.body.appendChild(link);
-      link.click();
-
-      setTimeout(() => {
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-      }, 500);
+      // Send download request to background (which has downloads permission)
+      await sendMessage({
+        type: 'DOWNLOAD_EXPORT',
+        payload: { data: res.data, filename },
+      });
     } catch (err) {
       console.error('[App] Export error:', err);
     }

@@ -17,7 +17,13 @@ export type MessageRequest =
   | { type: 'GENERATE_PASSWORD'; payload?: Partial<GeneratorOptions> }
   | { type: 'COPY_TO_CLIPBOARD'; payload: { text: string } }
   | { type: 'EXPORT_DATABASE' }
-  | { type: 'GET_ENTRIES_FOR_URL'; payload: { url: string } };
+  | { type: 'DOWNLOAD_EXPORT'; payload: { data: number[]; filename: string } }
+  | { type: 'DELETE_DATABASE' }
+  | { type: 'GET_ENTRIES_FOR_URL'; payload: { url: string } }
+  | { type: 'GET_BACKUP_HISTORY'; payload?: { limit?: number } }
+  | { type: 'RESTORE_FROM_BACKUP'; payload: { timestamp: number; password: string } }
+  | { type: 'GET_STORAGE_HEALTH' }
+  | { type: 'GET_RECOVERY_STATUS' };
 
 // ── Response types ─────────────────────────────────────────────
 
@@ -53,6 +59,44 @@ export interface GeneratePasswordResponse extends MessageResponse {
 export interface ExportResponse extends MessageResponse {
   success: true;
   data: number[];
+}
+
+// ── New Response Types ──────────────────────────────────────────
+
+export interface BackupHistoryResponse extends MessageResponse {
+  success: true;
+  data: {
+    backups: Array<{
+      timestamp: number;
+      version: number;
+      reason: string;
+      size: number;
+    }>;
+    totalSize: number;
+  };
+}
+
+export interface StorageHealthResponse extends MessageResponse {
+  success: true;
+  data: {
+    chromLocalSize: number;
+    indexedDbSize: number;
+    lastSyncTime: number;
+    integrity: {
+      checksumMatch: boolean;
+      versionCount: number;
+    };
+    issues: string[];
+  };
+}
+
+export interface RecoveryStatusResponse extends MessageResponse {
+  success: true;
+  data: {
+    hasRecoveryCodes: boolean;
+    remainingCodes: number;
+    codesGenerated: number;
+  };
 }
 
 // ── Constants ──────────────────────────────────────────────────
