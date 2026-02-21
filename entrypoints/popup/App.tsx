@@ -128,18 +128,20 @@ function App() {
       console.log('[Export] Clicking link');
       link.click();
 
-      console.log('[Export] Link clicked, cleaning up in 200ms');
-      setTimeout(() => {
-        try {
-          document.body.removeChild(link);
-          URL.revokeObjectURL(url);
-          console.log('[Export] Cleanup complete');
-        } catch (cleanupErr) {
-          console.error('[Export] Cleanup error:', cleanupErr);
-        }
-      }, 200);
+      // Don't close popup immediately - give Chrome time to process download
+      // Wait before cleanup to ensure download is queued
+      console.log('[Export] Link clicked, waiting 1s before cleanup (popup will stay open)');
+      await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      console.log('[Export] Export completed successfully');
+      try {
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        console.log('[Export] Cleanup complete');
+      } catch (cleanupErr) {
+        console.error('[Export] Cleanup error:', cleanupErr);
+      }
+
+      console.log('[Export] Export completed successfully - file should be in Downloads');
     } catch (err) {
       console.error('[Export] Export error:', err);
       alert('Export error: ' + (err instanceof Error ? err.message : String(err)));
