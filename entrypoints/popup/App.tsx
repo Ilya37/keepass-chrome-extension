@@ -88,21 +88,15 @@ function App() {
 
   const handleExportDatabase = async () => {
     try {
-      console.log('[Export] Starting export...');
+      console.log('[Export] Requesting export from background...');
       const res = await sendMessage<ExportResponse>({ type: 'EXPORT_DATABASE' });
-      console.log('[Export] Response:', { success: res.success, hasData: !!res.data, dataLength: res.data?.length });
-
-      if (!res.success) {
-        console.error('[Export] Export failed: success=false');
-        alert('Export failed');
-        return;
+      if (res.success) {
+        console.log('[Export] Export successful - background is handling download');
+      } else {
+        console.error('[Export] Export failed:', res.error);
       }
-
-      console.log('[Export] Export completed - check your Downloads folder');
-      alert('Database exported successfully! Check your Downloads folder.');
     } catch (err) {
-      console.error('[Export] Export error:', err);
-      alert('Export error: ' + (err instanceof Error ? err.message : String(err)));
+      console.error('[Export] Error:', err);
     }
   };
 

@@ -14,48 +14,6 @@ import { clearClipboard } from '@/lib/clipboard';
 /** Error code sent when the database is not unlocked (e.g. service worker restarted) */
 const NOT_UNLOCKED_ERROR = 'NOT_UNLOCKED';
 
-// ── Offscreen Document Helper ──────────────────────────────────────
-
-async function ensureOffscreenDocument(): Promise<void> {
-  try {
-    console.log('[Background] Creating offscreen document...');
-    await chrome.offscreen.createDocument({
-      url: chrome.runtime.getURL('offscreen.html'),
-      reasons: ['BLOBS'],
-      justification: 'Handle file downloads in MV3',
-    });
-    console.log('[Background] Offscreen document created successfully');
-  } catch (err: any) {
-    // If it already exists, ignore the error
-    if (err?.message?.includes('offscreen document with matching URL')) {
-      console.log('[Background] Offscreen document already exists');
-      return;
-    }
-    console.error('[Background] Failed to create offscreen document:', err);
-    throw err;
-  }
-}
-
-async function downloadViaOffscreen(data: number[], filename: string): Promise<{ success: true } | { success: false; error: string }> {
-  try {
-    console.log('[Background] Ensuring offscreen document...');
-    await ensureOffscreenDocument();
-    console.log('[Background] Sending DOWNLOAD_FILE message to offscreen...');
-
-    // Send message to offscreen document
-    const response = await chrome.runtime.sendMessage({
-      type: 'DOWNLOAD_FILE',
-      payload: { data, filename },
-    });
-
-    console.log('[Background] Offscreen response:', response);
-    return response;
-  } catch (err) {
-    console.error('[Background] Offscreen download error:', err);
-    return { success: false, error: String(err) };
-  }
-}
-
 
 // ── Storage Systems Initialization ─────────────────────────────
 
@@ -462,22 +420,44 @@ export default defineBackground(() => {
         case 'EXPORT_DATABASE': {
           const guard = await requireUnlocked();
           if (guard) return guard;
+          
           const exportData = await kdbx.saveDatabase();
-          const exportArr = Array.from(new Uint8Array(exportData));
-
-          // Trigger download via offscreen document
+          const uint8Array = new Uint8Array(exportData);
           const filename = `keepass-export-${new Date().toISOString().split('T')[0]}.kdbx`;
-          const downloadResult = await downloadViaOffscreen(exportArr, filename);
-
-          if (downloadResult.success) {
-            console.log('[Export] File downloaded successfully via offscreen');
-            return { success: true, data: exportArr } as ExportResponse;
-          } else {
-            console.error('[Export] Failed to download via offscreen:', downloadResult.error);
-            // Still return data in case popup wants to try direct download
-            return { success: true, data: exportArr } as ExportResponse;
+          
+          console.log('[Export] Database exported, size:', uint8Array.length, 'bytes');
+          console.log('[Export] Converting to base64...');
+          
+          // Convert to base64 safely (avoid stack overflow with large arrays)
+          let base64 = '';
+          const chunkSize = 8192;
+          for (let i = 0; i < uint8Array.length; i += chunkSize) {
+            const chunk = uint8Array.subarray(i, i + chunkSize);
+            base64 += String.fromCharCode.apply(null, Array.from(chunk));
           }
+          base64 = btoa(base64);
+          
+          const dataUrl = `data:application/octet-stream;base64,${base64}`;
+          console.log('[Export] Data URL length:', dataUrl.length);
+          
+          console.log('[Export] Starting download...');
+          try {
+            const downloadId = await chrome.downloads.download({
+              url: dataUrl,
+              filename: filename,
+              saveAs: false,
+            });
+            console.log('[Export] Download started with ID:', downloadId);
+          } catch (err) {
+            console.error('[Export] Download failed:', err);
+          }
+          
+          // Still return the data in case popup wants it
+          const exportArr = Array.from(uint8Array);
+          return { success: true, data: exportArr } as ExportResponse;
         }
+
+
 
         case 'GET_ENTRIES_FOR_URL': {
           if (!kdbx.isUnlocked()) {
