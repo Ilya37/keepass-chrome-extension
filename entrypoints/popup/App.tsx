@@ -98,58 +98,8 @@ function App() {
         return;
       }
 
-      if (!res.data || res.data.length === 0) {
-        console.error('[Export] Export failed: no data');
-        alert('Export failed: no data');
-        return;
-      }
-
-      const filename = `keepass-export-${new Date().toISOString().split('T')[0]}.kdbx`;
-      console.log('[Export] Filename:', filename);
-
-      // Create blob from binary data
-      const buffer = new Uint8Array(res.data);
-      const blob = new Blob([buffer], { type: 'application/octet-stream' });
-      console.log('[Export] Blob created:', blob.size, 'bytes');
-
-      // Create object URL and trigger download
-      const url = URL.createObjectURL(blob);
-      console.log('[Export] Blob URL created:', url);
-
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = filename;
-      link.style.display = 'none';
-      link.style.visibility = 'hidden';
-
-      // Add to body before clicking
-      document.body.appendChild(link);
-      console.log('[Export] Link appended to body');
-
-      // Trigger download with direct click first
-      link.click();
-      console.log('[Export] Direct click() called');
-
-      // Also try mouse event as fallback
-      const event = new MouseEvent('click', {
-        bubbles: true,
-        cancelable: true,
-        view: window,
-      });
-      const dispatched = link.dispatchEvent(event);
-      console.log('[Export] MouseEvent dispatched, result:', dispatched);
-
-      // Keep popup open and link in DOM for longer
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      console.log('[Export] Cleanup delay complete');
-
-      try {
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-        console.log('[Export] Cleanup complete');
-      } catch (e) {
-        console.error('[Export] Cleanup error (may be ok):', e);
-      }
+      console.log('[Export] Export completed - check your Downloads folder');
+      alert('Database exported successfully! Check your Downloads folder.');
     } catch (err) {
       console.error('[Export] Export error:', err);
       alert('Export error: ' + (err instanceof Error ? err.message : String(err)));

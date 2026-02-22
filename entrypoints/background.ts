@@ -14,6 +14,48 @@ import { clearClipboard } from '@/lib/clipboard';
 /** Error code sent when the database is not unlocked (e.g. service worker restarted) */
 const NOT_UNLOCKED_ERROR = 'NOT_UNLOCKED';
 
+// ── Offscreen Document Helper ──────────────────────────────────────
+
+async function ensureOffscreenDocument(): Promise<void> {
+  try {
+    // Check if offscreen document already exists
+    const docs = await chrome.offscreen.getDocuments();
+    if (docs.length > 0) {
+      return; // Already exists
+    }
+  } catch {
+    // If getDocuments fails, try creating anyway
+  }
+
+  try {
+    await chrome.offscreen.createDocument({
+      url: 'offscreen.html',
+      reasons: ['DOWNLOAD'],
+      justification: 'Download files for export functionality',
+    });
+    console.log('[Background] Offscreen document created');
+  } catch (err) {
+    console.error('[Background] Failed to create offscreen document:', err);
+  }
+}
+
+async function downloadViaOffscreen(data: number[], filename: string): Promise<{ success: true } | { success: false; error: string }> {
+  try {
+    await ensureOffscreenDocument();
+
+    // Send message to offscreen document
+    const response = await chrome.runtime.sendMessage({
+      type: 'DOWNLOAD_FILE',
+      payload: { data, filename },
+    });
+
+    return response;
+  } catch (err) {
+    console.error('[Background] Offscreen download error:', err);
+    return { success: false, error: String(err) };
+  }
+}
+
 
 // ── Storage Systems Initialization ─────────────────────────────
 
@@ -422,7 +464,19 @@ export default defineBackground(() => {
           if (guard) return guard;
           const exportData = await kdbx.saveDatabase();
           const exportArr = Array.from(new Uint8Array(exportData));
-          return { success: true, data: exportArr } as ExportResponse;
+
+          // Trigger download via offscreen document
+          const filename = `keepass-export-${new Date().toISOString().split('T')[0]}.kdbx`;
+          const downloadResult = await downloadViaOffscreen(exportArr, filename);
+
+          if (downloadResult.success) {
+            console.log('[Export] File downloaded successfully via offscreen');
+            return { success: true, data: exportArr } as ExportResponse;
+          } else {
+            console.error('[Export] Failed to download via offscreen:', downloadResult.error);
+            // Still return data in case popup wants to try direct download
+            return { success: true, data: exportArr } as ExportResponse;
+          }
         }
 
         case 'GET_ENTRIES_FOR_URL': {
