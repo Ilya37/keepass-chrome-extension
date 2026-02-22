@@ -111,23 +111,25 @@ function App() {
       const filename = `keepass-export-${new Date().toISOString().split('T')[0]}.kdbx`;
       console.log('[Export] Filename:', filename);
 
-      // Create blob from buffer and trigger download
+      // Create blob and convert to data URL using FileReader
       const blob = new Blob([buffer], { type: 'application/octet-stream' });
-      const url = URL.createObjectURL(blob);
-      console.log('[Export] Blob URL created');
+      console.log('[Export] Blob created:', blob.size, 'bytes');
 
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-
-      console.log('[Export] Download triggered, cleaning up');
-      // Clean up immediately - download is queued
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-
-      console.log('[Export] Export completed');
+      const reader = new FileReader();
+      reader.onload = () => {
+        console.log('[Export] FileReader completed, data URL ready');
+        const link = document.createElement('a');
+        link.href = reader.result as string;
+        link.download = filename;
+        console.log('[Export] Triggering download');
+        link.click();
+        console.log('[Export] Export completed');
+      };
+      reader.onerror = (err) => {
+        console.error('[Export] FileReader error:', err);
+        alert('Export error: Failed to read file');
+      };
+      reader.readAsDataURL(blob);
     } catch (err) {
       console.error('[Export] Export error:', err);
       alert('Export error: ' + (err instanceof Error ? err.message : String(err)));
