@@ -98,15 +98,16 @@ function App() {
         const blob = new Blob([buffer], { type: 'application/octet-stream' });
         const url = URL.createObjectURL(blob);
 
-        // Create and click download link
-        const filename = `keepass-export-${new Date().toISOString().split('T')[0]}.kdbx`;
+        // Create filename with database name
+        const dbName = appState?.status === 'unlocked' ? appState.meta.name : 'keepass';
+        const filename = `${dbName}-export-${new Date().toISOString().split('T')[0]}.kdbx`;
         const link = document.createElement('a');
         link.href = url;
         link.download = filename;
         link.style.display = 'none';
         document.body.appendChild(link);
 
-        console.log('[Export] Clicking download link...');
+        console.log('[Export] Clicking download link, filename:', filename);
         link.click();
 
         // Cleanup
