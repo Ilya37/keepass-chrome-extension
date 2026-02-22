@@ -21,27 +21,32 @@ async function ensureOffscreenDocument(): Promise<void> {
     // Check if offscreen document already exists
     const docs = await chrome.offscreen.getDocuments();
     if (docs.length > 0) {
+      console.log('[Background] Offscreen document already exists');
       return; // Already exists
     }
-  } catch {
-    // If getDocuments fails, try creating anyway
+  } catch (err) {
+    console.error('[Background] Error checking offscreen documents:', err);
   }
 
   try {
+    console.log('[Background] Creating offscreen document...');
     await chrome.offscreen.createDocument({
-      url: 'offscreen.html',
-      reasons: ['DOWNLOAD'],
+      url: chrome.runtime.getURL('offscreen.html'),
+      reasons: ['DOWNLOAD'] as any,
       justification: 'Download files for export functionality',
     });
-    console.log('[Background] Offscreen document created');
+    console.log('[Background] Offscreen document created successfully');
   } catch (err) {
     console.error('[Background] Failed to create offscreen document:', err);
+    throw err;
   }
 }
 
 async function downloadViaOffscreen(data: number[], filename: string): Promise<{ success: true } | { success: false; error: string }> {
   try {
+    console.log('[Background] Ensuring offscreen document...');
     await ensureOffscreenDocument();
+    console.log('[Background] Sending DOWNLOAD_FILE message to offscreen...');
 
     // Send message to offscreen document
     const response = await chrome.runtime.sendMessage({
@@ -49,6 +54,7 @@ async function downloadViaOffscreen(data: number[], filename: string): Promise<{
       payload: { data, filename },
     });
 
+    console.log('[Background] Offscreen response:', response);
     return response;
   } catch (err) {
     console.error('[Background] Offscreen download error:', err);
