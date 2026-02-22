@@ -107,14 +107,33 @@ function App() {
       const filename = `keepass-export-${new Date().toISOString().split('T')[0]}.kdbx`;
       console.log('[Export] Filename:', filename);
 
-      // Use background service worker to handle download via chrome.downloads API
-      const downloadRes = await sendMessage({ type: 'DOWNLOAD_EXPORT', payload: { data: res.data, filename } });
-      if (downloadRes.success) {
-        console.log('[Export] Download initiated successfully');
-      } else {
-        console.error('[Export] Download failed:', downloadRes.error);
-        alert('Export failed: ' + (downloadRes.error || 'Unknown error'));
-      }
+      // Create blob from binary data
+      const buffer = new Uint8Array(res.data);
+      const blob = new Blob([buffer], { type: 'application/octet-stream' });
+      console.log('[Export] Blob created:', blob.size, 'bytes');
+
+      // Create object URL and trigger download
+      const url = URL.createObjectURL(blob);
+      console.log('[Export] Blob URL created');
+
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      link.style.display = 'none';
+
+      document.body.appendChild(link);
+      console.log('[Export] Link appended to body');
+
+      // Trigger download
+      link.click();
+      console.log('[Export] Download triggered');
+
+      // Clean up after a short delay
+      setTimeout(() => {
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        console.log('[Export] Cleanup complete');
+      }, 100);
     } catch (err) {
       console.error('[Export] Export error:', err);
       alert('Export error: ' + (err instanceof Error ? err.message : String(err)));

@@ -425,32 +425,6 @@ export default defineBackground(() => {
           return { success: true, data: exportArr } as ExportResponse;
         }
 
-        case 'DOWNLOAD_EXPORT': {
-          const { data, filename } = msg.payload;
-          try {
-            const buffer = new Uint8Array(data);
-
-            // Convert to base64 for data URL (blob URLs not available in SW)
-            let binary = '';
-            for (let i = 0; i < buffer.length; i++) {
-              binary += String.fromCharCode(buffer[i]);
-            }
-            const base64 = btoa(binary);
-            const dataUrl = `data:application/octet-stream;base64,${base64}`;
-
-            await chrome.downloads.download({
-              url: dataUrl,
-              filename: filename,
-              saveAs: false,
-            });
-
-            return { success: true };
-          } catch (err) {
-            console.error('[Export] Download error:', err);
-            return { success: false, error: String(err) };
-          }
-        }
-
         case 'GET_ENTRIES_FOR_URL': {
           if (!kdbx.isUnlocked()) {
             // Try auto-unlock silently for content script
