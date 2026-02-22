@@ -18,25 +18,19 @@ const NOT_UNLOCKED_ERROR = 'NOT_UNLOCKED';
 
 async function ensureOffscreenDocument(): Promise<void> {
   try {
-    // Check if offscreen document already exists
-    const docs = await chrome.offscreen.getDocuments();
-    if (docs.length > 0) {
-      console.log('[Background] Offscreen document already exists');
-      return; // Already exists
-    }
-  } catch (err) {
-    console.error('[Background] Error checking offscreen documents:', err);
-  }
-
-  try {
     console.log('[Background] Creating offscreen document...');
     await chrome.offscreen.createDocument({
       url: chrome.runtime.getURL('offscreen.html'),
-      reasons: ['DOWNLOAD'] as any,
-      justification: 'Download files for export functionality',
+      reasons: ['BLOBS'],
+      justification: 'Handle file downloads in MV3',
     });
     console.log('[Background] Offscreen document created successfully');
-  } catch (err) {
+  } catch (err: any) {
+    // If it already exists, ignore the error
+    if (err?.message?.includes('offscreen document with matching URL')) {
+      console.log('[Background] Offscreen document already exists');
+      return;
+    }
     console.error('[Background] Failed to create offscreen document:', err);
     throw err;
   }
