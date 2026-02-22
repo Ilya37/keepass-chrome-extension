@@ -108,43 +108,26 @@ function App() {
       const buffer = new Uint8Array(res.data);
       console.log('[Export] Buffer created:', buffer.length, 'bytes');
 
-      // Convert to base64 for data URL
-      let binary = '';
-      for (let i = 0; i < buffer.length; i++) {
-        binary += String.fromCharCode(buffer[i]);
-      }
-      const base64 = btoa(binary);
-      console.log('[Export] Base64 encoded');
-
       const filename = `keepass-export-${new Date().toISOString().split('T')[0]}.kdbx`;
       console.log('[Export] Filename:', filename);
 
-      const dataUrl = `data:application/octet-stream;base64,${base64}`;
-      console.log('[Export] Data URL created, length:', dataUrl.length);
+      // Create blob from buffer and trigger download
+      const blob = new Blob([buffer], { type: 'application/octet-stream' });
+      const url = URL.createObjectURL(blob);
+      console.log('[Export] Blob URL created');
 
       const link = document.createElement('a');
-      link.href = dataUrl;
+      link.href = url;
       link.download = filename;
-      link.style.display = 'none';
-
-      console.log('[Export] Appending link to body');
       document.body.appendChild(link);
-
-      console.log('[Export] Clicking link to trigger download');
       link.click();
 
-      // Don't close popup immediately - give Chrome time to process download
-      console.log('[Export] Waiting 500ms before cleanup');
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      console.log('[Export] Download triggered, cleaning up');
+      // Clean up immediately - download is queued
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
 
-      try {
-        document.body.removeChild(link);
-        console.log('[Export] Link removed from body');
-      } catch (cleanupErr) {
-        console.error('[Export] Cleanup error:', cleanupErr);
-      }
-
-      console.log('[Export] Export completed - file should be in Downloads');
+      console.log('[Export] Export completed');
     } catch (err) {
       console.error('[Export] Export error:', err);
       alert('Export error: ' + (err instanceof Error ? err.message : String(err)));
