@@ -104,32 +104,17 @@ function App() {
         return;
       }
 
-      console.log('[Export] Creating Uint8Array from', res.data.length, 'bytes');
-      const buffer = new Uint8Array(res.data);
-      console.log('[Export] Buffer created:', buffer.length, 'bytes');
-
       const filename = `keepass-export-${new Date().toISOString().split('T')[0]}.kdbx`;
       console.log('[Export] Filename:', filename);
 
-      // Create blob and convert to data URL using FileReader
-      const blob = new Blob([buffer], { type: 'application/octet-stream' });
-      console.log('[Export] Blob created:', blob.size, 'bytes');
-
-      const reader = new FileReader();
-      reader.onload = () => {
-        console.log('[Export] FileReader completed, data URL ready');
-        const link = document.createElement('a');
-        link.href = reader.result as string;
-        link.download = filename;
-        console.log('[Export] Triggering download');
-        link.click();
-        console.log('[Export] Export completed');
-      };
-      reader.onerror = (err) => {
-        console.error('[Export] FileReader error:', err);
-        alert('Export error: Failed to read file');
-      };
-      reader.readAsDataURL(blob);
+      // Use background service worker to handle download via chrome.downloads API
+      const downloadRes = await sendMessage({ type: 'DOWNLOAD_EXPORT', payload: { data: res.data, filename } });
+      if (downloadRes.success) {
+        console.log('[Export] Download initiated successfully');
+      } else {
+        console.error('[Export] Download failed:', downloadRes.error);
+        alert('Export failed: ' + (downloadRes.error || 'Unknown error'));
+      }
     } catch (err) {
       console.error('[Export] Export error:', err);
       alert('Export error: ' + (err instanceof Error ? err.message : String(err)));

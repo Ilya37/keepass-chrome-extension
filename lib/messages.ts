@@ -17,6 +17,7 @@ export type MessageRequest =
   | { type: 'GENERATE_PASSWORD'; payload?: Partial<GeneratorOptions> }
   | { type: 'COPY_TO_CLIPBOARD'; payload: { text: string } }
   | { type: 'EXPORT_DATABASE' }
+  | { type: 'DOWNLOAD_EXPORT'; payload: { data: number[]; filename: string } }
   | { type: 'DELETE_DATABASE' }
   | { type: 'GET_ENTRIES_FOR_URL'; payload: { url: string } }
   | { type: 'GET_BACKUP_HISTORY'; payload?: { limit?: number } }

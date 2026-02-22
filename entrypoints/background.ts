@@ -425,6 +425,29 @@ export default defineBackground(() => {
           return { success: true, data: exportArr } as ExportResponse;
         }
 
+        case 'DOWNLOAD_EXPORT': {
+          const { data, filename } = msg.payload;
+          try {
+            const buffer = new Uint8Array(data);
+            const blob = new Blob([buffer], { type: 'application/octet-stream' });
+            const url = URL.createObjectURL(blob);
+
+            await chrome.downloads.download({
+              url: url,
+              filename: filename,
+              saveAs: false,
+            });
+
+            // Clean up the blob URL after a short delay
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+
+            return { success: true };
+          } catch (err) {
+            console.error('[Export] Download error:', err);
+            return { success: false, error: String(err) };
+          }
+        }
+
         case 'GET_ENTRIES_FOR_URL': {
           if (!kdbx.isUnlocked()) {
             // Try auto-unlock silently for content script
