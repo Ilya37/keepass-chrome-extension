@@ -36,7 +36,7 @@ export default defineConfig({
     homepage_url: 'https://github.com/Ilya37/keepass-chrome-extension',
     permissions: ['storage', 'activeTab', 'clipboardWrite', 'alarms'],
     content_security_policy: {
-      extension_pages: "script-src 'self' 'wasm-unsafe-eval'; object-src 'self' blob:; style-src 'self' 'unsafe-inline'",
+      extension_pages: "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'; style-src 'self' 'unsafe-inline'",
     },
   },
   vite: () => ({

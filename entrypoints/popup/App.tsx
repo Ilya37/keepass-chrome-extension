@@ -126,14 +126,18 @@ function App() {
       document.body.appendChild(link);
       console.log('[Export] Link appended to body');
 
-      // Trigger download with mouse event
+      // Trigger download with direct click first
+      link.click();
+      console.log('[Export] Direct click() called');
+
+      // Also try mouse event as fallback
       const event = new MouseEvent('click', {
         bubbles: true,
         cancelable: true,
         view: window,
       });
-      link.dispatchEvent(event);
-      console.log('[Export] Click event dispatched');
+      const dispatched = link.dispatchEvent(event);
+      console.log('[Export] MouseEvent dispatched, result:', dispatched);
 
       // Keep popup open and link in DOM for longer
       await new Promise((resolve) => setTimeout(resolve, 2000));
