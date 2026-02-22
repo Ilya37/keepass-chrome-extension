@@ -114,26 +114,38 @@ function App() {
 
       // Create object URL and trigger download
       const url = URL.createObjectURL(blob);
-      console.log('[Export] Blob URL created');
+      console.log('[Export] Blob URL created:', url);
 
       const link = document.createElement('a');
       link.href = url;
       link.download = filename;
       link.style.display = 'none';
+      link.style.visibility = 'hidden';
 
+      // Add to body before clicking
       document.body.appendChild(link);
       console.log('[Export] Link appended to body');
 
-      // Trigger download
-      link.click();
-      console.log('[Export] Download triggered');
+      // Trigger download with mouse event
+      const event = new MouseEvent('click', {
+        bubbles: true,
+        cancelable: true,
+        view: window,
+      });
+      link.dispatchEvent(event);
+      console.log('[Export] Click event dispatched');
 
-      // Clean up after a short delay
-      setTimeout(() => {
+      // Keep popup open and link in DOM for longer
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      console.log('[Export] Cleanup delay complete');
+
+      try {
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
         console.log('[Export] Cleanup complete');
-      }, 100);
+      } catch (e) {
+        console.error('[Export] Cleanup error (may be ok):', e);
+      }
     } catch (err) {
       console.error('[Export] Export error:', err);
       alert('Export error: ' + (err instanceof Error ? err.message : String(err)));
