@@ -90,8 +90,31 @@ function App() {
     try {
       console.log('[Export] Requesting export from background...');
       const res = await sendMessage<ExportResponse>({ type: 'EXPORT_DATABASE' });
-      if (res.success) {
-        console.log('[Export] Export successful - background is handling download');
+      if (res.success && res.data) {
+        console.log('[Export] Got data from background, size:', res.data.length);
+
+        // Create blob from array
+        const buffer = new Uint8Array(res.data);
+        const blob = new Blob([buffer], { type: 'application/octet-stream' });
+        const url = URL.createObjectURL(blob);
+
+        // Create and click download link
+        const filename = `keepass-export-${new Date().toISOString().split('T')[0]}.kdbx`;
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        link.style.display = 'none';
+        document.body.appendChild(link);
+
+        console.log('[Export] Clicking download link...');
+        link.click();
+
+        // Cleanup
+        setTimeout(() => {
+          document.body.removeChild(link);
+          URL.revokeObjectURL(url);
+          console.log('[Export] Download completed');
+        }, 100);
       } else {
         console.error('[Export] Export failed:', res.error);
       }

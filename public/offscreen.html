@@ -4,32 +4,6 @@
     <meta charset="UTF-8" />
   </head>
   <body>
-    <script>
-      // Download handler for offscreen document
-      chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-        if (message.type === 'DOWNLOAD_FILE') {
-          const { data, filename } = message.payload;
-          try {
-            const buffer = new Uint8Array(data);
-            const blob = new Blob([buffer], { type: 'application/octet-stream' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = filename;
-            link.style.display = 'none';
-            document.body.appendChild(link);
-            link.click();
-            setTimeout(() => {
-              document.body.removeChild(link);
-              URL.revokeObjectURL(url);
-            }, 100);
-            sendResponse({ success: true });
-          } catch (err) {
-            console.error('[Offscreen] Error:', err);
-            sendResponse({ success: false, error: String(err) });
-          }
-        }
-      });
-    </script>
+    <script src="offscreen.js"></script>
   </body>
 </html>

@@ -420,44 +420,11 @@ export default defineBackground(() => {
         case 'EXPORT_DATABASE': {
           const guard = await requireUnlocked();
           if (guard) return guard;
-          
           const exportData = await kdbx.saveDatabase();
-          const uint8Array = new Uint8Array(exportData);
-          const filename = `keepass-export-${new Date().toISOString().split('T')[0]}.kdbx`;
-          
-          console.log('[Export] Database exported, size:', uint8Array.length, 'bytes');
-          console.log('[Export] Converting to base64...');
-          
-          // Convert to base64 safely (avoid stack overflow with large arrays)
-          let base64 = '';
-          const chunkSize = 8192;
-          for (let i = 0; i < uint8Array.length; i += chunkSize) {
-            const chunk = uint8Array.subarray(i, i + chunkSize);
-            base64 += String.fromCharCode.apply(null, Array.from(chunk));
-          }
-          base64 = btoa(base64);
-          
-          const dataUrl = `data:application/octet-stream;base64,${base64}`;
-          console.log('[Export] Data URL length:', dataUrl.length);
-          
-          console.log('[Export] Starting download...');
-          try {
-            const downloadId = await chrome.downloads.download({
-              url: dataUrl,
-              filename: filename,
-              saveAs: false,
-            });
-            console.log('[Export] Download started with ID:', downloadId);
-          } catch (err) {
-            console.error('[Export] Download failed:', err);
-          }
-          
-          // Still return the data in case popup wants it
-          const exportArr = Array.from(uint8Array);
+          const exportArr = Array.from(new Uint8Array(exportData));
+          console.log('[Export] Database exported, size:', exportArr.length, 'bytes');
           return { success: true, data: exportArr } as ExportResponse;
         }
-
-
 
         case 'GET_ENTRIES_FOR_URL': {
           if (!kdbx.isUnlocked()) {
