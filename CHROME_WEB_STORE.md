@@ -129,7 +129,19 @@ https://github.com/Ilya37/keepass-chrome-extension
    - ✅ Убедись что нет инъекций или malware
    - ✅ Нет политических/оскорбительных материалов
 
-5. **Submit for Review**
+5. **Privacy practices** — для каждой permission укажи обоснование (см. ниже)
+
+6. **Submit for Review**
+
+### Permission justifications (Privacy practices tab)
+
+При заполнении вкладки Privacy practices Chrome Web Store запрашивает обоснование для некоторых разрешений. Используй следующий текст:
+
+**activeTab**
+> Used to access the active tab when the user clicks the extension icon, so we can detect the current page URL and show matching password entries. Access is granted only in response to an explicit user gesture (clicking the extension icon). Required for the Fill feature — user opens the extension on a login page, sees matching entries, and clicks Fill to autofill credentials.
+
+**scripting**
+> Used to inject a fill script into the current tab when the user clicks the "Fill" button in the popup. The script fills username and password fields in login forms. Execution happens only on explicit user action (Fill button click) and only targets the active tab that the user opened the extension on. No background injection — scripts run solely in response to user gestures.
 
 ### Примерный календарь
 
@@ -152,9 +164,10 @@ https://github.com/Ilya37/keepass-chrome-extension
 
 ✅ **Будет одобрено если:**
 - Работает как описано в Store Listing
-- Не требует excessive permissions
+- Не требует excessive permissions (storage, alarms, activeTab, scripting + optional clipboardWrite)
+- Обоснования для activeTab и scripting заполнены во вкладке Privacy practices
 - Privacy Policy ясная и полная
-- Код безопасен и открыт
+- Код безопасен и открыт (GitHub)
 
 ### Обновление расширения
 
@@ -185,6 +198,21 @@ https://github.com/Ilya37/keepass-chrome-extension
 3. Скрыть sensitive информацию (реальные пароли)
 4. Использовать яркие цвета и контраст
 5. Тестировать на мобильных устройствах
+
+---
+
+## 🔍 Chrome Web Store Audit (последняя проверка)
+
+| Категория | Статус | Примечания |
+|-----------|--------|------------|
+| Permissions | ✅ | storage, alarms, activeTab, scripting + optional clipboardWrite — все используются |
+| Privacy & Data | ✅ | Нет внешних запросов (favicon убран), нет аналитики/трекинга |
+| Content Security | ✅ | CSP в порядке, нет eval пользовательского контента |
+| Manifest | ✅ | MV3, нет запрещённых полей |
+| Code Quality | ✅ | Без обфускации, без запрещённых API |
+| Store Listing | ⚠️ | Текст должен соответствовать реальной работе (autofill через popup → Fill) |
+
+**Исправлено при аудите:** Запрос favicon к `google.com/s2/favicons` удалён — нарушал Privacy Policy («No network requests»). Теперь используется локальная SVG-иконка.
 
 ---
 

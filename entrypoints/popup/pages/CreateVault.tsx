@@ -1,9 +1,13 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { sendMessage } from '@/lib/messages';
 import type { StateResponse } from '@/lib/messages';
 import { PasswordInput } from '../components/PasswordInput';
 import { StrengthMeter } from '../components/StrengthMeter';
-import { calculateStrength } from '@/lib/password-generator';
+import {
+  loadCreateVaultDraft,
+  saveCreateVaultDraft,
+  clearCreateVaultDraft,
+} from '@/lib/form-drafts';
 
 interface Props {
   onCreated: () => void;
@@ -17,6 +21,29 @@ export function CreateVault({ onCreated }: Props) {
   const [loading, setLoading] = useState(false);
   const [mode, setMode] = useState<'create' | 'import'>('create');
   const [importFile, setImportFile] = useState<{ name: string; data: number[] } | null>(null);
+
+  // Load draft on mount
+  useEffect(() => {
+    loadCreateVaultDraft().then((draft) => {
+      if (draft) {
+        setName(draft.name);
+        setPassword(draft.password);
+        setConfirmPassword(draft.confirmPassword);
+        setMode(draft.mode);
+      }
+    });
+  }, []);
+
+  useEffect(() => {
+    const t = setTimeout(
+      () => saveCreateVaultDraft({ name, password, confirmPassword, mode }),
+      300,
+    );
+    return () => clearTimeout(t);
+  }, [name, password, confirmPassword, mode]);
+
+  const saveDraftNow = () =>
+    saveCreateVaultDraft({ name, password, confirmPassword, mode });
 
   const handleCreate = async () => {
     setError('');
@@ -40,6 +67,7 @@ export function CreateVault({ onCreated }: Props) {
         payload: { name, password },
       });
       if (res.success) {
+        await clearCreateVaultDraft();
         onCreated();
       } else {
         setError(res.error);
@@ -84,6 +112,7 @@ export function CreateVault({ onCreated }: Props) {
         payload: { data: importFile.data, password },
       });
       if (res.success) {
+        await clearCreateVaultDraft();
         onCreated();
       } else {
         setError(res.error);
@@ -96,7 +125,7 @@ export function CreateVault({ onCreated }: Props) {
   };
 
   return (
-    <div className="p-4">
+    <div className="p-4" onBlur={saveDraftNow}>
       <div className="text-center mb-6">
         <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-3">
           <svg className="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">

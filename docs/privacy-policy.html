@@ -75,9 +75,10 @@
 <p>The extension requests the following browser permissions:</p>
 <ul>
   <li><strong>storage</strong> — to save the encrypted database locally.</li>
-  <li><strong>activeTab</strong> — to detect login forms on the current page for autofill.</li>
-  <li><strong>clipboardWrite</strong> — to copy passwords to the clipboard (auto-cleared after 15 seconds).</li>
-  <li><strong>alarms</strong> — to schedule auto-lock (15 minutes of inactivity) and clipboard auto-clear.</li>
+  <li><strong>alarms</strong> — auto-lock (15 min) and clipboard auto-clear.</li>
+  <li><strong>activeTab</strong> — to fill passwords when you open the extension on a login page.</li>
+  <li><strong>scripting</strong> — to fill fields into the current page when you click Fill.</li>
+  <li><strong>clipboardWrite</strong> (optional) — to copy passwords; requested when you first copy.</li>
 </ul>
 
 <h2>Third-Party Services</h2>

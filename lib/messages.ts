@@ -19,6 +19,7 @@ export type MessageRequest =
   | { type: 'EXPORT_DATABASE' }
   | { type: 'DELETE_DATABASE' }
   | { type: 'GET_ENTRIES_FOR_URL'; payload: { url: string } }
+  | { type: 'FILL_IN_TAB'; payload: { tabId: number; username: string; password: string } }
   | { type: 'GET_BACKUP_HISTORY'; payload?: { limit?: number } }
   | { type: 'RESTORE_FROM_BACKUP'; payload: { timestamp: number; password: string } }
   | { type: 'GET_STORAGE_HEALTH' }

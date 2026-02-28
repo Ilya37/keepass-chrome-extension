@@ -13,6 +13,8 @@ export function EntryList({ onSelect, onAdd, onSessionLost }: Props) {
   const [entries, setEntries] = useState<EntryData[]>([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
+  const [pageEntries, setPageEntries] = useState<EntryData[]>([]);
+  const [pageTabId, setPageTabId] = useState<number | null>(null);
 
   const loadEntries = useCallback(async (query?: string) => {
     const res = await sendMessage<EntriesResponse>({
@@ -38,17 +40,67 @@ export function EntryList({ onSelect, onAdd, onSessionLost }: Props) {
     return () => clearTimeout(timer);
   }, [search, loadEntries]);
 
-  const getFaviconUrl = (url: string) => {
-    try {
-      const hostname = new URL(url).hostname;
-      return `https://www.google.com/s2/favicons?domain=${hostname}&sz=32`;
-    } catch {
-      return null;
-    }
-  };
+  // Load entries for current tab (activeTab — user opened popup on this page)
+  useEffect(() => {
+    (async () => {
+      try {
+        const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
+        if (!tab?.id || !tab.url?.startsWith('http')) return;
+        setPageTabId(tab.id);
+        const res = await sendMessage<EntriesResponse>({
+          type: 'GET_ENTRIES_FOR_URL',
+          payload: { url: tab.url },
+        });
+        if (res.success && res.data.length > 0) setPageEntries(res.data);
+      } catch {
+        // Tab access might be denied
+      }
+    })();
+  }, []);
+
+  const handleFill = useCallback(
+    async (entry: EntryData) => {
+      if (pageTabId == null) return;
+      const res = await sendMessage({
+        type: 'FILL_IN_TAB',
+        payload: { tabId: pageTabId, username: entry.username ?? '', password: entry.password ?? '' },
+      });
+      if (!res.success) onSessionLost(res);
+      else window.close();
+    },
+    [pageTabId, onSessionLost],
+  );
 
   return (
     <div className="flex flex-col h-full">
+      {/* On this page — Fill (activeTab) */}
+      {pageEntries.length > 0 && (
+        <div className="mx-3 mt-2 mb-1 rounded-lg border border-emerald-200 bg-emerald-50 p-2">
+          <p className="text-xs font-medium text-emerald-800 mb-2">On this page:</p>
+          <div className="space-y-1">
+            {pageEntries.slice(0, 3).map((entry) => (
+              <div key={entry.id} className="flex items-center justify-between gap-2">
+                <button
+                  onClick={() => onSelect(entry)}
+                  className="flex-1 min-w-0 text-left text-sm text-emerald-900 truncate hover:underline"
+                >
+                  {entry.title || 'Untitled'}
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleFill(entry);
+                  }}
+                  className="flex-shrink-0 rounded bg-emerald-600 px-2 py-1 text-xs font-medium text-white hover:bg-emerald-700"
+                >
+                  Fill
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Search bar */}
       <div className="p-3 border-b border-gray-200">
         <div className="relative">
@@ -105,20 +157,9 @@ export function EntryList({ onSelect, onAdd, onSessionLost }: Props) {
                 className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-100 transition-colors text-left"
               >
                 <div className="w-8 h-8 bg-gray-200 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
-                  {entry.url ? (
-                    <img
-                      src={getFaviconUrl(entry.url) || ''}
-                      alt=""
-                      className="w-5 h-5"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).style.display = 'none';
-                      }}
-                    />
-                  ) : (
-                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                    </svg>
-                  )}
+                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                  </svg>
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-gray-800 truncate">

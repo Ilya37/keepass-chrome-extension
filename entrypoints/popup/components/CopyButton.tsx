@@ -6,22 +6,26 @@ interface Props {
 
 export function CopyButton({ text }: Props) {
   const [copied, setCopied] = useState(false);
+  const [error, setError] = useState(false);
 
   const handleCopy = async () => {
+    setError(false);
     try {
+      const has = await browser.permissions.contains({ permissions: ['clipboardWrite'] });
+      if (!has) {
+        const granted = await browser.permissions.request({ permissions: ['clipboardWrite'] });
+        if (!granted) {
+          setError(true);
+          return;
+        }
+      }
       await navigator.clipboard.writeText(text);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+      // Schedule clipboard clear (background handles alarm)
+      browser.runtime.sendMessage({ type: 'COPY_TO_CLIPBOARD', payload: { text } }).catch(() => {});
     } catch {
-      // Fallback
-      const textarea = document.createElement('textarea');
-      textarea.value = text;
-      document.body.appendChild(textarea);
-      textarea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textarea);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      setError(true);
     }
   };
 
@@ -29,9 +33,9 @@ export function CopyButton({ text }: Props) {
     <button
       onClick={handleCopy}
       className={`p-1 rounded transition-colors ${
-        copied ? 'text-emerald-600' : 'text-gray-400 hover:text-gray-600'
+        copied ? 'text-emerald-600' : error ? 'text-red-500' : 'text-gray-400 hover:text-gray-600'
       }`}
-      title={copied ? 'Copied!' : 'Copy'}
+      title={copied ? 'Copied!' : error ? 'Grant clipboard permission' : 'Copy'}
     >
       {copied ? (
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

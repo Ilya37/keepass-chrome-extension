@@ -4,12 +4,11 @@ import { CLIPBOARD_CLEAR_SECONDS, ALARM_CLIPBOARD_CLEAR } from './constants';
  * Copy text to clipboard and schedule auto-clear
  */
 export async function copyToClipboard(text: string): Promise<void> {
-  // Use the offscreen API or fallback to execCommand in service worker context
+  // clipboardWrite permission allows navigator.clipboard in popup/offscreen contexts
   try {
     await navigator.clipboard.writeText(text);
   } catch {
-    // Fallback: create a textarea in offscreen document or content script
-    // For now, this is handled through the popup context where clipboard API works
+    // Copy is initiated from popup where clipboard API is available
     throw new Error('Clipboard API not available in this context');
   }
 

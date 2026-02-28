@@ -1,150 +1,154 @@
 # KeePass Chrome Extension
 
-KeePass-совместимый менеджер паролей в виде расширения для Chrome. Работает полностью в браузере — все данные шифруются локально и никуда не отправляются.
+[Русский](README.ru.md) | **English**
 
-## Возможности
+KeePass-compatible password manager as a Chrome extension. Runs entirely in the browser — all data is encrypted locally and never sent anywhere.
 
-- **Создание и открытие `.kdbx` баз** — полная совместимость с KeePass 2.x
-- **Импорт/экспорт** — можно открыть существующую базу KeePass или создать новую
-- **Управление паролями** — добавление, редактирование, удаление записей
-- **Поиск** — быстрый поиск по названию, логину, URL и тегам
-- **Генератор паролей** — настраиваемый генератор с оценкой сложности
-- **Автозаполнение** — автоматическое обнаружение форм входа на сайтах
-- **Копирование в буфер** — с автоматической очисткой через 15 секунд
-- **Авто-блокировка** — база автоматически блокируется после 15 минут неактивности
+## Features
 
-## Безопасность
+- **Create and open `.kdbx` databases** — full KeePass 2.x compatibility
+- **Import/export** — open existing KeePass database or create a new one
+- **Password management** — add, edit, delete entries; fill in URL for autofill on sites
+- **Search** — quick search by title, login, URL and tags
+- **Password generator** — configurable generator with strength meter
+- **Autofill** — open the extension on a login page to see matching entries and click Fill
+- **Copy to clipboard** — with auto-clear after 15 seconds
+- **Auto-lock** — database locks automatically after 15 minutes of inactivity
 
-- Мастер-пароль **нигде не сохраняется** — используется только для получения ключа шифрования
-- База данных хранится в зашифрованном виде (AES-256 / ChaCha20) через формат `.kdbx`
-- Ключ шифрования находится в памяти только пока база разблокирована
-- Content script не хранит пароли — получает их только в момент автозаполнения
-- Буфер обмена автоматически очищается после копирования пароля
+## Security
 
-## Установка
+- Master password is **never stored** — used only to derive the encryption key
+- Database stored encrypted (AES-256 / ChaCha20) in `.kdbx` format
+- Encryption key exists in memory only while the database is unlocked
+- Fill is triggered only when you click — scripts run on user action
+- Clipboard is automatically cleared after copying a password
 
-### Требования
+## Installation
 
-- [Node.js](https://nodejs.org/) версии 18 или выше
-- Google Chrome (или любой Chromium-браузер)
+### Requirements
 
-### Сборка из исходников
+- [Node.js](https://nodejs.org/) 18 or higher
+- Google Chrome (or any Chromium-based browser)
+
+### Build from source
 
 ```bash
-# Клонировать репозиторий
+# Clone the repository
 git clone https://github.com/your-username/keepass-chrome-extension.git
 cd keepass-chrome-extension
 
-# Установить зависимости
+# Install dependencies
 npm install
 
-# Собрать расширение
+# Build the extension
 npm run build
 ```
 
-Собранное расширение появится в папке `.output/chrome-mv3/`.
+The built extension will be in `.output/chrome-mv3/`.
 
-### Загрузка в Chrome
+### Load in Chrome
 
-1. Открой `chrome://extensions/` в Chrome
-2. Включи **Developer mode** (переключатель в правом верхнем углу)
-3. Нажми **Load unpacked**
-4. Выбери папку `.output/chrome-mv3/`
+1. Open `chrome://extensions/` in Chrome
+2. Enable **Developer mode** (toggle in top right)
+3. Click **Load unpacked**
+4. Select the `.output/chrome-mv3/` folder
 
-## Разработка
+## Development
 
 ```bash
-# Запуск dev-сервера с hot reload
+# Start dev server with hot reload
 npm run dev
 
-# Проверка типов TypeScript
+# TypeScript type check
 npm run compile
 
-# Сборка для Firefox
+# Build for Firefox
 npm run build:firefox
 
-# Создание .zip для публикации
+# Create .zip for publication
 npm run zip
 ```
 
-При запуске `npm run dev` расширение с hot reload появится в `.output/chrome-mv3-dev/` — загрузи эту папку через "Load unpacked" в Chrome.
+With `npm run dev`, the extension with hot reload will be in `.output/chrome-mv3-dev/` — load that folder via "Load unpacked" in Chrome.
 
-## Использование
+## Usage
 
-### Первый запуск
+### First launch
 
-1. Нажми на иконку расширения в панели Chrome
-2. Выбери **Create New** для создания новой базы или **Import File** для открытия существующего `.kdbx` файла
-3. Задай мастер-пароль (минимум 8 символов)
+1. Click the extension icon in the Chrome toolbar
+2. Choose **Create New** to create a new database or **Import File** to open an existing `.kdbx` file
+3. Set a master password (at least 8 characters)
 
-### Управление паролями
+### Password management
 
-- **Добавить запись** — кнопка "Add Entry" внизу списка
-- **Просмотреть** — клик по записи в списке
-- **Редактировать** — кнопка "Edit" на странице записи
-- **Удалить** — кнопка "Delete" (с подтверждением)
-- **Копировать** — иконка копирования рядом с полями логина, пароля и URL
+- **Add entry** — "Add Entry" button at the bottom of the list
+- **View** — click an entry in the list
+- **Edit** — "Edit" button on the entry page
+- **Delete** — "Delete" (with confirmation)
+- **Copy** — copy icon next to login, password, and URL fields
 
-### Генератор паролей
+The popup always restores the last page and form drafts when reopened. You can close it to copy from elsewhere — your data will be there when you reopen.
 
-Доступен через иконку ключа в шапке или при создании/редактировании записи (кнопка со стрелками рядом с полем пароля). Настройки:
-- Длина (4–64 символа)
-- Заглавные / строчные буквы
-- Цифры
-- Спецсимволы
-- Исключение неоднозначных символов (0/O, 1/l/I)
+### Password generator
 
-### Автозаполнение
+Available via the key icon in the header or when creating/editing an entry (refresh button next to the password field). Options:
+- Length (4–64 characters)
+- Uppercase / lowercase letters
+- Digits
+- Special characters
+- Exclude ambiguous characters (0/O, 1/l/I)
 
-Когда база разблокирована и вы заходите на сайт, для которого есть сохранённый пароль, на форме логина появится зелёный индикатор **K**. Нажмите на него — логин и пароль будут заполнены автоматически.
+### Autofill
 
-## Структура проекта
+**Fill in the URL field** when creating or editing an entry — this is required for autofill. Enter just the hostname (e.g. `italki.com` or `mail.example.com`); no `https://` needed.
+
+To fill a password: open the extension while on a login page. If you have a matching entry, you'll see "On this page" with a **Fill** button. Click it to fill username and password.
+
+## Project structure
 
 ```
 ├── entrypoints/
-│   ├── background.ts          # Service Worker — ядро расширения
-│   ├── content.ts             # Content Script — автозаполнение на сайтах
+│   ├── background.ts          # Service Worker — extension core
+│   │                          # (no content script — fill via popup + scripting)
 │   └── popup/                 # Popup UI (React)
-│       ├── App.tsx            # Роутинг между страницами
-│       ├── pages/             # Страницы: CreateVault, Unlock, EntryList,
+│       ├── App.tsx            # Page routing
+│       ├── pages/             # CreateVault, Unlock, EntryList,
 │       │                      #   EntryDetail, EntryForm, Generator
 │       └── components/        # PasswordInput, CopyButton, StrengthMeter
 ├── lib/
-│   ├── kdbx.ts                # Обёртка над kdbxweb — работа с .kdbx базой
-│   ├── crypto-setup.ts        # Инициализация Argon2 (hash-wasm) для kdbxweb
-│   ├── storage.ts             # Сохранение в chrome.storage.local / session
-│   ├── messages.ts            # Типизированный messaging API
-│   ├── password-generator.ts  # Генератор паролей
-│   ├── clipboard.ts           # Копирование с авто-очисткой
-│   ├── types.ts               # Общие TypeScript-типы
-│   ├── constants.ts           # Настройки и константы
-│   └── fflate-worker-shim.js  # Шим для совместимости fflate с MV3 SW
-├── wxt.config.ts              # Конфигурация WXT + Vite + Tailwind
+│   ├── kdbx.ts                # kdbxweb wrapper — .kdbx database handling
+│   ├── crypto-setup.ts        # Argon2 (hash-wasm) init for kdbxweb
+│   ├── storage.ts             # chrome.storage.local / session persistence
+│   ├── messages.ts            # Typed messaging API
+│   ├── password-generator.ts  # Password generator
+│   ├── clipboard.ts           # Copy with auto-clear
+│   ├── types.ts               # Shared TypeScript types
+│   ├── constants.ts           # Settings and constants
+│   └── fflate-worker-shim.js  # fflate compatibility shim for MV3 SW
+├── wxt.config.ts              # WXT + Vite + Tailwind config
 ├── tsconfig.json
 └── package.json
 ```
 
-## Стек технологий
+## Tech stack
 
-| Технология | Назначение |
+| Technology | Purpose |
 |---|---|
-| [TypeScript](https://www.typescriptlang.org/) | Язык разработки |
-| [WXT](https://wxt.dev/) | Фреймворк для Chrome Extensions (Manifest V3) |
-| [React 19](https://react.dev/) | UI-фреймворк |
-| [Tailwind CSS 4](https://tailwindcss.com/) | Стилизация |
-| [kdbxweb](https://github.com/nicolo-ribaudo/nickel-keepass) | Работа с форматом .kdbx (KeePass 2.x) |
+| [TypeScript](https://www.typescriptlang.org/) | Development language |
+| [WXT](https://wxt.dev/) | Chrome Extensions framework (Manifest V3) |
+| [React 19](https://react.dev/) | UI framework |
+| [Tailwind CSS 4](https://tailwindcss.com/) | Styling |
+| [kdbxweb](https://github.com/nicolo-ribaudo/nickel-keepass) | .kdbx format handling (KeePass 2.x) |
 | [hash-wasm](https://github.com/nickel-nickel/nickel-hash-wasm) | Argon2 key derivation (WASM) |
-| [Vite](https://vite.dev/) | Сборщик (через WXT) |
+| [Vite](https://vite.dev/) | Bundler (via WXT) |
 
 ---
 
-## Architecture / Архитектура
-
-> Подробное описание архитектуры расширения. Написано на английском языке (стандарт для open source).
+## Architecture
 
 ### High-Level Overview
 
-The extension follows Chrome Manifest V3 architecture with three isolated components communicating via Chrome messaging APIs:
+The extension follows Chrome Manifest V3 with three isolated components communicating via Chrome messaging APIs:
 
 ```mermaid
 graph TB
@@ -170,171 +174,33 @@ graph TB
     BG -->|"read/write"| Session
 ```
 
-### Component Responsibilities
+### Component responsibilities
 
-#### Background Service Worker (`entrypoints/background.ts`)
+**Background Service Worker** — central hub; database ops, crypto init, message routing, auto-lock/unlock, clipboard management.
 
-The central hub of the extension. All database operations happen here.
+**Popup UI** — React SPA (CreateVault, Unlock, EntryList, EntryDetail, EntryForm, Generator).
 
-- **Crypto initialization** -- configures kdbxweb with Argon2 (hash-wasm) on startup
-- **Message routing** -- receives typed messages from popup and content script, dispatches to handlers
-- **Database operations** -- create, open, save, lock via `lib/kdbx.ts` wrapper
-- **Persistence** -- saves encrypted .kdbx blob to `chrome.storage.local` after every mutation
-- **Auto-lock** -- alarm-based timer (15 min default), clears database from memory
-- **Auto-unlock** -- after Service Worker restart, re-opens database using password from `chrome.storage.session`
-- **Clipboard management** -- schedules auto-clear alarm after copy
+**Content Script** — detects login forms, requests matching entries from background, shows extension icon on password field, fills on click.
 
-#### Popup UI (`entrypoints/popup/`)
+### Message protocol
 
-React single-page application rendered in the extension popup (380x500px).
+Typed messages in `lib/messages.ts`: GET_STATE, CREATE_DATABASE, IMPORT_DATABASE, UNLOCK, LOCK, GET_ENTRIES, GET_ENTRY, CREATE_ENTRY, UPDATE_ENTRY, DELETE_ENTRY, GET_GROUPS, GENERATE_PASSWORD, COPY_TO_CLIPBOARD, EXPORT_DATABASE, GET_ENTRIES_FOR_URL, FILL_IN_TAB.
 
-| Page | Purpose |
-|---|---|
-| `CreateVault` | Create new database or import existing .kdbx file |
-| `Unlock` | Master password entry for locked database |
-| `EntryList` | Searchable list of all password entries |
-| `EntryDetail` | View entry fields (username, password, URL, notes) |
-| `EntryForm` | Create or edit an entry |
-| `Generator` | Standalone password generator with strength meter |
+### Security
 
-| Component | Purpose |
-|---|---|
-| `PasswordInput` | Input field with show/hide toggle |
-| `CopyButton` | Copy to clipboard with visual feedback |
-| `StrengthMeter` | 5-bar password strength indicator |
+- **Encryption**: Argon2 KDF → AES-256-CBC / ChaCha20, ProtectedValue for fields
+- **Session**: master password in `chrome.storage.session` (cleared on browser quit)
+- **Auto-lock**: 15 min via `chrome.alarms`
+- **Clipboard**: auto-clear 15 s after copy
 
-Routing is state-based in `App.tsx`: the popup asks the background for the current `AppState` (`no_database` / `locked` / `unlocked`) and navigates accordingly.
+### Storage
 
-#### Content Script (`entrypoints/content.ts`)
-
-Injected into all web pages. Detects login forms and provides autofill.
-
-- Uses `MutationObserver` to detect password fields (including dynamically added ones)
-- Sends `GET_ENTRIES_FOR_URL` to background with the current page hostname
-- If matching entries exist, displays a green **K** indicator on the password field
-- On click, fills username and password using `setNativeValue()` (compatible with React/Vue/Angular change detection)
-
-### Message Protocol
-
-All communication uses typed messages defined in `lib/messages.ts`:
-
-```mermaid
-graph LR
-    subgraph requests [Request Types]
-        R1["GET_STATE"]
-        R2["CREATE_DATABASE"]
-        R3["IMPORT_DATABASE"]
-        R4["UNLOCK / LOCK"]
-        R5["GET_ENTRIES / GET_ENTRY"]
-        R6["CREATE_ENTRY / UPDATE_ENTRY / DELETE_ENTRY"]
-        R7["GET_GROUPS"]
-        R8["GENERATE_PASSWORD"]
-        R9["COPY_TO_CLIPBOARD"]
-        R10["EXPORT_DATABASE"]
-        R11["GET_ENTRIES_FOR_URL"]
-    end
-
-    subgraph responses [Response Types]
-        S1["StateResponse"]
-        S2["EntriesResponse"]
-        S3["EntryResponse"]
-        S4["GroupsResponse"]
-        S5["GeneratePasswordResponse"]
-        S6["ExportResponse"]
-    end
-```
-
-The `sendMessage()` helper includes retry logic (3 attempts, 500ms delay, 5s timeout per attempt) to handle Service Worker startup latency.
-
-### Data Flow: CRUD Operations
-
-```mermaid
-sequenceDiagram
-    participant User
-    participant Popup
-    participant Background
-    participant KdbxLib as kdbx.ts
-    participant Storage as chrome.storage.local
-
-    User->>Popup: Create/Edit/Delete entry
-    Popup->>Background: sendMessage(CRUD operation)
-    Background->>Background: requireUnlocked()
-    Background->>KdbxLib: createEntry() / updateEntry() / deleteEntry()
-    KdbxLib->>KdbxLib: Modify in-memory kdbx database
-    Background->>KdbxLib: saveDatabase()
-    KdbxLib-->>Background: Encrypted ArrayBuffer
-    Background->>Storage: saveDatabaseBlob(base64)
-    Background->>Storage: saveDatabaseMeta(name, count)
-    Background-->>Popup: { success: true, data: entry }
-    Popup->>User: Update UI
-```
-
-### Security Model
-
-#### Encryption
-
-The .kdbx format provides multi-layer encryption:
-
-1. **Key Derivation** -- Master password is processed through **Argon2d** or **Argon2id** (memory-hard KDF) to produce the encryption key. Parameters (memory, iterations, parallelism) are stored in the .kdbx header.
-2. **Database Encryption** -- The entire database is encrypted with **AES-256-CBC** or **ChaCha20** (configurable per .kdbx file).
-3. **Field Protection** -- Individual sensitive fields (passwords) use `ProtectedValue` objects that XOR the value with a random salt in memory, preventing accidental exposure in logs or memory dumps.
-
-#### Argon2 Implementation
-
-`kdbxweb` does not bundle Argon2 -- it must be provided externally. We use `hash-wasm` which:
-- Loads WASM **lazily** (only when Argon2 is first called, not at import time)
-- Works in Chrome MV3 Service Workers (with `'wasm-unsafe-eval'` CSP)
-- Supports both Argon2d and Argon2id variants
-
-Configured in `lib/crypto-setup.ts` via `kdbxweb.CryptoEngine.setArgon2Impl()`.
-
-#### Session Management
-
-```mermaid
-stateDiagram-v2
-    [*] --> NoDatabase: First launch
-    NoDatabase --> Unlocked: Create / Import
-    Unlocked --> Locked: Lock / Auto-lock
-    Locked --> Unlocked: Unlock
-    Unlocked --> Unlocked: SW restart (auto-unlock)
-    Unlocked --> Locked: Browser quit (session cleared)
-```
-
-- **chrome.storage.session** stores the master password temporarily. It survives Service Worker restarts but is **cleared when the browser quits**.
-- On every SW restart, `tryAutoUnlock()` attempts to re-open the database using the session password, making the restart transparent to the user.
-- On manual lock or auto-lock timeout, the session password is explicitly cleared.
-
-#### Auto-Lock
-
-- Uses `chrome.alarms` API (not `setTimeout`, which doesn't survive SW termination)
-- Timer resets on every database operation (15-minute sliding window)
-- On trigger: clears in-memory database, clears session password
-
-#### Clipboard Security
-
-- After copying a password, a 15-second alarm is scheduled
-- On trigger: clipboard is overwritten with an empty string
-
-### Storage Architecture
-
-| Storage Layer | Contents | Lifetime |
+| Layer | Contents | Lifetime |
 |---|---|---|
-| **chrome.storage.local** | Encrypted .kdbx blob (base64), database metadata (name, date, entry count) | Persistent -- survives browser restarts. Deleted only with extension uninstall. |
-| **chrome.storage.session** | Master password (plaintext) | Temporary -- survives SW restarts but cleared on browser quit. |
-| **In-memory** (`kdbx.ts`) | Decrypted `Kdbx` object with all entries | Volatile -- cleared on lock, auto-lock, or SW termination. |
+| chrome.storage.local | Encrypted .kdbx blob, metadata | Persistent until uninstall |
+| chrome.storage.session | Master password | Until browser quit |
+| In-memory | Decrypted Kdbx | Until lock / SW termination |
 
-### Build Pipeline
-
-The extension is built with **WXT** (Web Extension Toolkit) which wraps Vite:
-
-1. **WXT** generates the Manifest V3 `manifest.json` from `wxt.config.ts`
-2. **Vite** bundles TypeScript/React into single-file outputs for each entrypoint
-3. **Tailwind CSS** is applied via the `@tailwindcss/vite` plugin
-4. **Custom Vite plugin** (`stripFflateWorker`) replaces `new Worker()` calls from fflate (kdbxweb dependency) with a no-op shim, since Chrome MV3 Service Workers cannot create Web Workers
-5. **Node.js `crypto`** module (imported by kdbxweb) is externalized as an empty shim -- kdbxweb detects `globalThis.crypto.subtle` (Web Crypto API) at runtime and uses it instead
-
-Output: `.output/chrome-mv3/` with `background.js` (~238KB), `popup.html` + chunk (~219KB), `content.js` (~5KB), icons, and CSS.
-
-## Лицензия
+## License
 
 MIT

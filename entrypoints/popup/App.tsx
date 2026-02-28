@@ -67,9 +67,36 @@ function App() {
     }
   }, []);
 
+  // On mount: fetch appState (needed for header), restore page from storage when valid
   useEffect(() => {
-    refreshState();
-  }, [refreshState]);
+    (async () => {
+      try {
+        const res = await sendMessage<StateResponse>({ type: 'GET_STATE' });
+        if (res.success) setAppState(res.data);
+        const state = res.success ? res.data : null;
+        const { popupPageState } = await browser.storage.local.get('popupPageState');
+
+        if (state?.status === 'unlocked' && popupPageState) {
+          setPage(popupPageState);
+        } else if (state?.status === 'locked') {
+          setPage(popupPageState?.name === 'unlock' ? popupPageState : { name: 'unlock' });
+        } else if (state?.status === 'no_database') {
+          setPage(popupPageState?.name === 'create_vault' ? popupPageState : { name: 'create_vault' });
+        } else {
+          setPage(state?.status === 'unlocked' ? { name: 'entry_list' } : { name: 'create_vault' });
+        }
+      } catch (err) {
+        console.error('[App] Failed to load:', err);
+        setPage({ name: 'create_vault' });
+      }
+    })();
+  }, []);
+
+  // Always save page state for restore on reopen
+  useEffect(() => {
+    if (page.name === 'loading') return;
+    browser.storage.local.set({ popupPageState: page }).catch(() => {});
+  }, [page]);
 
   const handleLock = async () => {
     try {

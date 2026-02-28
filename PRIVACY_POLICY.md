@@ -47,9 +47,10 @@ All your passwords and database information are stored **locally** on your devic
 ### Permissions
 
 - `storage`: To store encrypted database
-- `activeTab`: To detect current website for password suggestions
-- `clipboardWrite`: To copy passwords to clipboard
-- `alarms`: For scheduled backups and snapshots
+- `alarms`: For auto-lock (15 min) and clipboard auto-clear
+- `activeTab`: To fill passwords when you open the extension on a login page
+- `scripting`: To fill username/password into the current page (only when you click Fill)
+- `clipboardWrite` (optional, requested when you first copy): To copy passwords
 
 None of these permissions are used to transmit data externally.
 

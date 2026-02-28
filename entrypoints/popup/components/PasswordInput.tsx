@@ -5,10 +5,14 @@ interface Props {
   onChange: (value: string) => void;
   placeholder?: string;
   autoFocus?: boolean;
+  className?: string;
 }
 
-export function PasswordInput({ value, onChange, placeholder, autoFocus }: Props) {
+export function PasswordInput({ value, onChange, placeholder, autoFocus, className }: Props) {
   const [show, setShow] = useState(false);
+  const inputClass =
+    'w-full px-3 py-2 pr-10 border rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none ' +
+    (className ?? 'border-gray-300');
 
   return (
     <div className="relative">
@@ -16,7 +20,7 @@ export function PasswordInput({ value, onChange, placeholder, autoFocus }: Props
         type={show ? 'text' : 'password'}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
+        className={inputClass}
         placeholder={placeholder}
         autoFocus={autoFocus}
       />

@@ -37,6 +37,9 @@ async function initializeStorageSystems(): Promise<void> {
   }
 }
 
+// Storage initialization promise - ensures we wait for storage to be ready
+let storageInitialized: Promise<void> | null = null;
+
 export default defineBackground(() => {
   // Initialize Argon2 for kdbxweb before any database operations
   try {
@@ -46,9 +49,14 @@ export default defineBackground(() => {
   }
 
   // Initialize new storage systems (IndexedDB, backup, recovery, journal)
-  initializeStorageSystems().catch((err) => {
-    console.error('Failed to initialize storage systems:', err);
-  });
+  // Store promise so we can await it before operations that need storage
+  storageInitialized = initializeStorageSystems()
+    .then(() => {
+      console.log('[Background] Storage systems initialized successfully');
+    })
+    .catch((err) => {
+      console.error('Failed to initialize storage systems:', err);
+    });
 
   // ── Auto-unlock after service worker restart ───────────────
   // Chrome MV3 can kill the service worker at any time.
@@ -198,6 +206,11 @@ export default defineBackground(() => {
 
   async function handleMessage(msg: MessageRequest): Promise<MessageResponse> {
     try {
+      // Ensure storage is initialized before processing messages
+      if (storageInitialized) {
+        await storageInitialized;
+      }
+
       switch (msg.type) {
         case 'GET_STATE': {
           const state = await getAppState();
@@ -249,7 +262,7 @@ export default defineBackground(() => {
               console.error('[bg] IMPORT_DATABASE openDatabase failed:', err);
               const errMsg = err instanceof Error ? err.message : String(err);
               if (errMsg.includes('InvalidKey')) {
-                return { success: false, error: 'Wrong master password. If this file uses a key file, key files are not yet supported.' };
+                return { success: false, error: 'Wrong master password.' };
               }
               throw err;
             }
@@ -428,7 +441,6 @@ export default defineBackground(() => {
 
         case 'GET_ENTRIES_FOR_URL': {
           if (!kdbx.isUnlocked()) {
-            // Try auto-unlock silently for content script
             await tryAutoUnlock();
             if (!kdbx.isUnlocked()) {
               return { success: true, data: [] } as EntriesResponse;
@@ -437,6 +449,42 @@ export default defineBackground(() => {
           resetAutoLockTimer();
           const urlEntries = kdbx.getEntriesForUrl(msg.payload.url);
           return { success: true, data: urlEntries } as EntriesResponse;
+        }
+
+        case 'FILL_IN_TAB': {
+          const guard = await requireUnlocked();
+          if (guard) return guard;
+          const { tabId, username, password } = msg.payload;
+          try {
+            await browser.scripting.executeScript({
+              target: { tabId },
+              func: (user: string, pass: string) => {
+                const setNativeValue = (input: HTMLInputElement, value: string) => {
+                  const setter = Object.getOwnPropertyDescriptor(
+                    window.HTMLInputElement.prototype,
+                    'value',
+                  )?.set;
+                  if (setter) setter.call(input, value);
+                  else input.value = value;
+                  input.dispatchEvent(new Event('input', { bubbles: true }));
+                  input.dispatchEvent(new Event('change', { bubbles: true }));
+                };
+                const pwFields = document.querySelectorAll<HTMLInputElement>('input[type="password"]');
+                if (pwFields.length === 0) return;
+                const field = pwFields[0];
+                const form = field.closest('form');
+                const userField = form?.querySelector<HTMLInputElement>(
+                  'input[type="text"], input[type="email"], input[name*="user"], input[name*="login"], input[name*="email"], input[autocomplete="username"]',
+                );
+                if (userField) setNativeValue(userField, user);
+                setNativeValue(field, pass);
+              },
+              args: [username, password],
+            });
+            return { success: true };
+          } catch (err) {
+            return { success: false, error: String(err) };
+          }
         }
 
         case 'GET_BACKUP_HISTORY': {

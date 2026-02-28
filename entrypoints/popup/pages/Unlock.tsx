@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { DatabaseMeta } from '@/lib/types';
 import type { StateResponse } from '@/lib/messages';
 import { sendMessage } from '@/lib/messages';
 import { PasswordInput } from '../components/PasswordInput';
+import { loadUnlockDraft, saveUnlockDraft, clearUnlockDraft } from '@/lib/form-drafts';
 
 interface Props {
   meta?: DatabaseMeta;
@@ -13,6 +14,19 @@ export function Unlock({ meta, onUnlocked }: Props) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    loadUnlockDraft().then((draft) => {
+      if (draft) setPassword(draft);
+    });
+  }, []);
+
+  useEffect(() => {
+    const t = setTimeout(() => saveUnlockDraft(password), 300);
+    return () => clearTimeout(t);
+  }, [password]);
+
+  const saveDraftNow = () => saveUnlockDraft(password);
 
   const handleUnlock = async () => {
     if (!password) {
@@ -28,6 +42,7 @@ export function Unlock({ meta, onUnlocked }: Props) {
         payload: { password },
       });
       if (res.success) {
+        await clearUnlockDraft();
         onUnlocked();
       } else {
         setError('Wrong password. Try again.');
@@ -59,7 +74,7 @@ export function Unlock({ meta, onUnlocked }: Props) {
         </p>
       </div>
 
-      <div className="space-y-3" onKeyDown={handleKeyDown}>
+      <div className="space-y-3" onKeyDown={handleKeyDown} onBlur={saveDraftNow}>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Master Password

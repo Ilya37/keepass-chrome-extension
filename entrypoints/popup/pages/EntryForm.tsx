@@ -1,9 +1,14 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import type { EntryData } from '@/lib/types';
 import type { EntryResponse, GeneratePasswordResponse, MessageResponse } from '@/lib/messages';
 import { sendMessage } from '@/lib/messages';
 import { PasswordInput } from '../components/PasswordInput';
 import { StrengthMeter } from '../components/StrengthMeter';
+import {
+  loadEntryFormDraft,
+  saveEntryFormDraft,
+  clearEntryFormDraft,
+} from '@/lib/form-drafts';
 
 interface Props {
   entry?: EntryData;
@@ -13,6 +18,8 @@ interface Props {
 }
 
 export function EntryForm({ entry, onSaved, onCancel, onSessionLost }: Props) {
+  const isEditing = !!entry;
+
   const [title, setTitle] = useState(entry?.title ?? '');
   const [username, setUsername] = useState(entry?.username ?? '');
   const [password, setPassword] = useState(entry?.password ?? '');
@@ -21,8 +28,58 @@ export function EntryForm({ entry, onSaved, onCancel, onSessionLost }: Props) {
   const [tags, setTags] = useState(entry?.tags.join(', ') ?? '');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [restoredFromDraft, setRestoredFromDraft] = useState(false);
 
-  const isEditing = !!entry;
+  // Load draft (new or edit) or init from entry when no draft
+  useEffect(() => {
+    const entryId = entry?.id;
+    loadEntryFormDraft(entryId).then((draft) => {
+      if (draft) {
+        setTitle(draft.title);
+        setUsername(draft.username);
+        setPassword(draft.password);
+        setUrl(draft.url);
+        setNotes(draft.notes);
+        setTags(draft.tags);
+        setRestoredFromDraft(true);
+      } else {
+        if (entry) {
+          setTitle(entry.title ?? '');
+          setUsername(entry.username ?? '');
+          setPassword(entry.password ?? '');
+          setUrl(entry.url ?? '');
+          setNotes(entry.notes ?? '');
+          setTags(entry.tags?.join(', ') ?? '');
+        }
+        setRestoredFromDraft(false);
+      }
+    });
+  }, [entry?.id]);
+
+  const draft = { title, username, password, url, notes, tags };
+  const entryId = entry?.id;
+
+  // Unsaved changes detection (edit mode only)
+  const entryTagsStr = entry?.tags?.join(', ') ?? '';
+  const titleChanged = (title || '').trim() !== (entry?.title ?? '').trim();
+  const usernameChanged = username !== (entry?.username ?? '');
+  const passwordChanged = password !== (entry?.password ?? '');
+  const urlChanged = url !== (entry?.url ?? '');
+  const notesChanged = notes !== (entry?.notes ?? '');
+  const tagsChanged = tags !== entryTagsStr;
+  const hasUnsavedChanges =
+    isEditing && (titleChanged || usernameChanged || passwordChanged || urlChanged || notesChanged || tagsChanged);
+
+  // Save draft on change (debounced)
+  useEffect(() => {
+    const t = setTimeout(() => saveEntryFormDraft(draft, entryId), 300);
+    return () => clearTimeout(t);
+  }, [title, username, password, url, notes, tags, entryId]);
+
+  // Save immediately on blur — before popup may close when user clicks away to copy
+  const saveDraftNow = useCallback(() => {
+    saveEntryFormDraft(draft, entryId);
+  }, [title, username, password, url, notes, tags, entryId]);
 
   const handleGeneratePassword = async () => {
     const res = await sendMessage<GeneratePasswordResponse>({
@@ -89,6 +146,7 @@ export function EntryForm({ entry, onSaved, onCancel, onSessionLost }: Props) {
           return;
         }
       }
+      await clearEntryFormDraft(entry?.id);
       onSaved();
     } catch {
       setError('Failed to save entry');
@@ -97,13 +155,24 @@ export function EntryForm({ entry, onSaved, onCancel, onSessionLost }: Props) {
     }
   };
 
+  const fieldClass = (changed: boolean) =>
+    'w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none ' +
+    (changed ? 'border-amber-400 bg-amber-50' : 'border-gray-300');
+
   return (
     <div className="p-4">
-      <h2 className="text-lg font-semibold text-gray-800 mb-4">
-        {isEditing ? 'Edit Entry' : 'New Entry'}
-      </h2>
+      <div className="mb-4">
+        <h2 className="text-lg font-semibold text-gray-800">
+          {isEditing ? 'Edit Entry' : 'New Entry'}
+        </h2>
+        {hasUnsavedChanges && restoredFromDraft && (
+          <p className="mt-1 inline-block rounded border border-amber-200 bg-amber-50 px-2.5 py-1 text-sm text-amber-800">
+            You have unsaved changes
+          </p>
+        )}
+      </div>
 
-      <div className="space-y-3">
+      <div className="space-y-3" onBlur={saveDraftNow}>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Title *
@@ -112,7 +181,7 @@ export function EntryForm({ entry, onSaved, onCancel, onSessionLost }: Props) {
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
+            className={fieldClass(isEditing && titleChanged)}
             placeholder="e.g. Gmail, GitHub..."
             autoFocus
           />
@@ -126,7 +195,7 @@ export function EntryForm({ entry, onSaved, onCancel, onSessionLost }: Props) {
             type="text"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
+            className={fieldClass(isEditing && usernameChanged)}
             placeholder="user@example.com"
           />
         </div>
@@ -141,6 +210,9 @@ export function EntryForm({ entry, onSaved, onCancel, onSessionLost }: Props) {
                 value={password}
                 onChange={setPassword}
                 placeholder="Password"
+                className={
+                  isEditing && passwordChanged ? 'border-amber-400 bg-amber-50' : 'border-gray-300'
+                }
               />
             </div>
             <button
@@ -161,12 +233,15 @@ export function EntryForm({ entry, onSaved, onCancel, onSessionLost }: Props) {
           <label className="block text-sm font-medium text-gray-700 mb-1">
             URL
           </label>
+          <p className="text-xs text-gray-500 mb-1">
+            Required for autofill on websites — hostname only (e.g. italki.com, mail.example.com)
+          </p>
           <input
-            type="url"
+            type="text"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
-            placeholder="https://example.com"
+            className={fieldClass(isEditing && urlChanged)}
+            placeholder="italki.com"
           />
         </div>
 
@@ -178,7 +253,7 @@ export function EntryForm({ entry, onSaved, onCancel, onSessionLost }: Props) {
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             rows={3}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none resize-none"
+            className={fieldClass(isEditing && notesChanged) + ' resize-none'}
             placeholder="Additional notes..."
           />
         </div>
@@ -191,7 +266,7 @@ export function EntryForm({ entry, onSaved, onCancel, onSessionLost }: Props) {
             type="text"
             value={tags}
             onChange={(e) => setTags(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
+            className={fieldClass(isEditing && tagsChanged)}
             placeholder="tag1, tag2, ..."
           />
         </div>

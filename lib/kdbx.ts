@@ -183,20 +183,33 @@ export function getEntry(id: string): EntryData | null {
   return null;
 }
 
+/** Normalize URL or plain hostname (e.g. "italki.com") to hostname */
+function toHostname(input: string): string | null {
+  const s = input.trim().toLowerCase();
+  if (!s) return null;
+  try {
+    return new URL(s.startsWith('http') ? s : `https://${s}`).hostname;
+  } catch {
+    const beforeSlash = s.split('/')[0] || s;
+    return beforeSlash;
+  }
+}
+
+/** Check if entry URL matches page URL (supports "italki.com" without protocol) */
+function urlMatches(entryUrl: string, pageHostname: string): boolean {
+  const entryHost = toHostname(entryUrl);
+  if (!entryHost) return false;
+  return (
+    pageHostname === entryHost ||
+    pageHostname.endsWith('.' + entryHost)
+  );
+}
+
 /** Get entries matching a URL (for autofill) */
 export function getEntriesForUrl(url: string): EntryData[] {
-  try {
-    const hostname = new URL(url).hostname;
-    return getEntries().filter((e) => {
-      try {
-        return e.url && new URL(e.url).hostname === hostname;
-      } catch {
-        return e.url.includes(hostname);
-      }
-    });
-  } catch {
-    return [];
-  }
+  const pageHost = toHostname(url);
+  if (!pageHost) return [];
+  return getEntries().filter((e) => e.url && urlMatches(e.url, pageHost));
 }
 
 /** Create a new entry in a group */
