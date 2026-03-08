@@ -102,14 +102,21 @@ Available via the key icon in the header or when creating/editing an entry (refr
 
 **Fill in the URL field** when creating or editing an entry — this is required for autofill. Enter just the hostname (e.g. `italki.com` or `mail.example.com`); no `https://` needed.
 
-To fill a password: open the extension while on a login page. If you have a matching entry, you'll see "On this page" with a **Fill** button. Click it to fill username and password.
+When you visit a login page with a matching password entry:
+
+1. The extension automatically detects the password field
+2. A **KeePass logo** (green square with lock icon) appears directly on the password field
+3. Click the icon to autofill username and password
+4. The popup is not required to be open for this to work
+
+Alternatively, you can open the extension popup while on a login page. If you have a matching entry, you'll see "On this page" with a **Fill** button.
 
 ## Project structure
 
 ```
 ├── entrypoints/
 │   ├── background.ts          # Service Worker — extension core
-│   │                          # (no content script — fill via popup + scripting)
+│   ├── content.ts             # Content Script — detects login forms, shows icon
 │   └── popup/                 # Popup UI (React)
 │       ├── App.tsx            # Page routing
 │       ├── pages/             # CreateVault, Unlock, EntryList,
@@ -180,7 +187,7 @@ graph TB
 
 **Popup UI** — React SPA (CreateVault, Unlock, EntryList, EntryDetail, EntryForm, Generator).
 
-**Content Script** — detects login forms, requests matching entries from background, shows extension icon on password field, fills on click.
+**Content Script** — detects password fields on every page, requests matching entries from background, displays the KeePass logo on detected fields, and fills credentials when the icon is clicked.
 
 ### Message protocol
 

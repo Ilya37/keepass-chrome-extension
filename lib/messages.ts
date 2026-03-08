@@ -23,7 +23,8 @@ export type MessageRequest =
   | { type: 'GET_BACKUP_HISTORY'; payload?: { limit?: number } }
   | { type: 'RESTORE_FROM_BACKUP'; payload: { timestamp: number; password: string } }
   | { type: 'GET_STORAGE_HEALTH' }
-  | { type: 'GET_RECOVERY_STATUS' };
+  | { type: 'GET_RECOVERY_STATUS' }
+  | { type: 'GET_ICON' };
 
 // ── Response types ─────────────────────────────────────────────
 

@@ -451,6 +451,25 @@ export default defineBackground(() => {
           return { success: true, data: urlEntries } as EntriesResponse;
         }
 
+        case 'GET_ICON': {
+          try {
+            const url = browser.runtime.getURL('/icon/32.png');
+            const response = await fetch(url);
+            const blob = await response.blob();
+            const reader = new FileReader();
+            return new Promise((resolve) => {
+              reader.onload = () => {
+                const dataUrl = reader.result as string;
+                resolve({ success: true, data: dataUrl });
+              };
+              reader.readAsDataURL(blob);
+            });
+          } catch (err) {
+            console.error('Failed to get icon:', err);
+            return { success: false, error: String(err) };
+          }
+        }
+
         case 'FILL_IN_TAB': {
           const guard = await requireUnlocked();
           if (guard) return guard;
