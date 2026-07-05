@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import type { DatabaseMeta } from '@/lib/types';
-import type { StateResponse } from '@/lib/messages';
+import type { MessageResponse, StateResponse } from '@/lib/messages';
 import { sendMessage } from '@/lib/messages';
 import { PasswordInput } from '../components/PasswordInput';
 import { loadUnlockDraft, saveUnlockDraft, clearUnlockDraft } from '@/lib/form-drafts';
@@ -14,6 +14,9 @@ export function Unlock({ meta, onUnlocked }: Props) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [confirmReset, setConfirmReset] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resetError, setResetError] = useState('');
 
   useEffect(() => {
     loadUnlockDraft().then((draft) => {
@@ -58,6 +61,30 @@ export function Unlock({ meta, onUnlocked }: Props) {
     if (e.key === 'Enter') handleUnlock();
   };
 
+  const handleResetVault = async () => {
+    if (!confirmReset) {
+      setConfirmReset(true);
+      setResetError('');
+      return;
+    }
+
+    setResetLoading(true);
+    setResetError('');
+    try {
+      const res = await sendMessage<MessageResponse>({ type: 'DELETE_DATABASE' });
+      if (res.success) {
+        await clearUnlockDraft();
+        onUnlocked();
+      } else {
+        setResetError(res.error || 'Failed to reset vault');
+      }
+    } catch {
+      setResetError('Failed to reset vault');
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
   return (
     <div className="p-4">
       <div className="text-center mb-6">
@@ -100,6 +127,49 @@ export function Unlock({ meta, onUnlocked }: Props) {
         >
           {loading ? 'Unlocking...' : 'Unlock'}
         </button>
+
+        <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2.5">
+          <p className="text-xs text-red-700">
+            Forgot master password? You can delete this vault and create or import a new one.
+          </p>
+          {confirmReset && (
+            <p className="mt-1 text-xs text-red-700">
+              This permanently removes the current encrypted database from extension storage.
+            </p>
+          )}
+          {resetError && (
+            <div className="mt-2 text-red-600 text-sm bg-white px-2 py-1 rounded border border-red-200">
+              {resetError}
+            </div>
+          )}
+          <div className="mt-2 flex gap-2">
+            <button
+              type="button"
+              onClick={handleResetVault}
+              disabled={resetLoading}
+              className="flex-1 rounded-lg bg-red-600 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50 transition-colors"
+            >
+              {resetLoading
+                ? 'Resetting...'
+                : confirmReset
+                  ? 'Delete Vault and Start Over'
+                  : 'Forgot Password'}
+            </button>
+            {confirmReset && (
+              <button
+                type="button"
+                onClick={() => {
+                  setConfirmReset(false);
+                  setResetError('');
+                }}
+                disabled={resetLoading}
+                className="rounded-lg bg-white border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition-colors"
+              >
+                Cancel
+              </button>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import type { EntryData } from '@/lib/types';
-import type { EntryResponse, GeneratePasswordResponse, MessageResponse } from '@/lib/messages';
+import type { EntriesResponse, EntryResponse, GeneratePasswordResponse, MessageResponse } from '@/lib/messages';
 import { sendMessage } from '@/lib/messages';
 import { PasswordInput } from '../components/PasswordInput';
 import { StrengthMeter } from '../components/StrengthMeter';
@@ -29,6 +29,20 @@ export function EntryForm({ entry, onSaved, onCancel, onSessionLost }: Props) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [restoredFromDraft, setRestoredFromDraft] = useState(false);
+  const [availableTags, setAvailableTags] = useState<string[]>([]);
+
+  const parseTags = useCallback((value: string): string[] => {
+    return Array.from(
+      new Set(
+        value
+          .split(',')
+          .map((tag) => tag.trim())
+          .filter(Boolean),
+      ),
+    );
+  }, []);
+
+  const selectedTags = useMemo(() => parseTags(tags), [tags, parseTags]);
 
   // Load draft (new or edit) or init from entry when no draft
   useEffect(() => {
@@ -55,6 +69,38 @@ export function EntryForm({ entry, onSaved, onCancel, onSessionLost }: Props) {
       }
     });
   }, [entry?.id]);
+
+  // Load all existing tags to speed up entry creation (still allows custom tags)
+  useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      const res = await sendMessage<EntriesResponse>({ type: 'GET_ENTRIES' });
+      if (cancelled) return;
+      if (!res.success) {
+        onSessionLost(res);
+        return;
+      }
+
+      const uniqueTags = new Set<string>();
+      for (const item of res.data) {
+        for (const tag of item.tags ?? []) {
+          const cleaned = tag.trim();
+          if (cleaned) uniqueTags.add(cleaned);
+        }
+      }
+
+      setAvailableTags(
+        Array.from(uniqueTags).sort((a, b) =>
+          a.localeCompare(b, undefined, { sensitivity: 'base' }),
+        ),
+      );
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [onSessionLost]);
 
   const draft = { title, username, password, url, notes, tags };
   const entryId = entry?.id;
@@ -99,10 +145,7 @@ export function EntryForm({ entry, onSaved, onCancel, onSessionLost }: Props) {
     setLoading(true);
     setError('');
 
-    const parsedTags = tags
-      .split(',')
-      .map((t) => t.trim())
-      .filter(Boolean);
+    const parsedTags = parseTags(tags);
 
     try {
       if (isEditing) {
@@ -153,6 +196,14 @@ export function EntryForm({ entry, onSaved, onCancel, onSessionLost }: Props) {
     } finally {
       setLoading(false);
     }
+  };
+
+  const toggleTag = (tag: string) => {
+    const hasTag = selectedTags.includes(tag);
+    const nextTags = hasTag
+      ? selectedTags.filter((t) => t !== tag)
+      : [...selectedTags, tag];
+    setTags(nextTags.join(', '));
   };
 
   const fieldClass = (changed: boolean) =>
@@ -269,6 +320,30 @@ export function EntryForm({ entry, onSaved, onCancel, onSessionLost }: Props) {
             className={fieldClass(isEditing && tagsChanged)}
             placeholder="tag1, tag2, ..."
           />
+          {availableTags.length > 0 && (
+            <div className="mt-2">
+              <p className="text-xs text-gray-500 mb-1">Existing tags</p>
+              <div className="flex flex-wrap gap-1">
+                {availableTags.map((tag) => {
+                  const isSelected = selectedTags.includes(tag);
+                  return (
+                    <button
+                      key={tag}
+                      type="button"
+                      onClick={() => toggleTag(tag)}
+                      className={`rounded-full border px-2 py-0.5 text-xs transition-colors ${
+                        isSelected
+                          ? 'border-emerald-600 bg-emerald-600 text-white'
+                          : 'border-gray-300 bg-white text-gray-700 hover:border-emerald-400'
+                      }`}
+                    >
+                      {tag}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
 
         {error && (

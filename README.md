@@ -10,6 +10,7 @@ KeePass-compatible password manager as a Chrome extension. Runs entirely in the 
 - **Import/export** — open existing KeePass database or create a new one
 - **Password management** — add, edit, delete entries; fill in URL for autofill on sites
 - **Search** — quick search by title, login, URL and tags
+- **Tag breakdown** — switch list mode to "By tags" to browse entries grouped by tag
 - **Password generator** — configurable generator with strength meter
 - **Autofill** — open the extension on a login page to see matching entries and click Fill
 - **Copy to clipboard** — with auto-clear after 15 seconds
