@@ -2,7 +2,7 @@
 
 ## KeePass Password Manager Chrome Extension
 
-**Last Updated: February 2026**
+**Last Updated: October 2026**
 
 ### Overview
 
@@ -36,6 +36,15 @@ All your passwords and database information are stored **locally** on your devic
 3. **Session Storage (chrome.storage.session)**
    - Encrypted auto-unlock tokens
    - Cleared when browser exits
+
+### Opening an Existing .kdbx File
+
+When you choose **Open Existing** and select a `.kdbx` file:
+
+- The file is read on your device and an **encrypted copy** is stored in the extension's local storage (see Data Storage above). The copy is a standard encrypted `.kdbx` file protected by the same master password — it is never stored decrypted and cannot be read without that password.
+- The file is **not uploaded**, synced, or transmitted anywhere. The extension has no server and makes no network requests.
+- Your original file is **not modified**. The extension does not keep a live link to it; changes are saved to the local copy, and **Export** downloads them as a new `.kdbx` file.
+- You can remove the local copy at any time via "Forgot Password" → "Delete Vault and Start Over" on the unlock screen, or by uninstalling the extension.
 
 ### Encryption
 

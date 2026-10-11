@@ -408,7 +408,7 @@ export function getOperationDescription(operationType: string): string {
     database_save: 'Saved database',
     password_change: 'Changed password',
     create_database: 'Created database',
-    import_database: 'Imported database',
+    import_database: 'Opened database from file',
     auto_unlock: 'Auto-unlocked database',
     delete_database: 'Deleted database',
     recover_backup: 'Recovered from backup',

@@ -118,7 +118,7 @@ export function CreateVault({ onCreated }: Props) {
         setError(res.error);
       }
     } catch (err) {
-      setError('Failed to import database. Check your password.');
+      setError('Failed to open database. Check your password.');
     } finally {
       setLoading(false);
     }
@@ -133,7 +133,7 @@ export function CreateVault({ onCreated }: Props) {
           </svg>
         </div>
         <h2 className="text-lg font-semibold text-gray-800">Welcome to KeePass</h2>
-        <p className="text-sm text-gray-500 mt-1">Create a new vault or import an existing .kdbx file</p>
+        <p className="text-sm text-gray-500 mt-1">Create a new vault or open your existing .kdbx file</p>
       </div>
 
       {/* Toggle */}
@@ -152,7 +152,7 @@ export function CreateVault({ onCreated }: Props) {
             mode === 'import' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500'
           }`}
         >
-          Import File
+          Open Existing
         </button>
       </div>
 
@@ -211,6 +211,20 @@ export function CreateVault({ onCreated }: Props) {
           </>
         ) : (
           <>
+            {/* What happens to the file — shown before the user picks anything */}
+            <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-xs text-emerald-900 space-y-1">
+              <p className="font-medium">Your file stays on this device</p>
+              <p>
+                The extension keeps an <strong>encrypted copy</strong> of your .kdbx in Chrome's extension
+                storage on this computer only. It is never uploaded — the extension makes no network
+                requests at all.
+              </p>
+              <p>
+                Your original file is not modified. Changes you make here are saved to the local copy;
+                use <strong>Export</strong> in the header to write them back to a .kdbx file.
+              </p>
+            </div>
+
             {/* Step 1: Select file */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -265,14 +279,14 @@ export function CreateVault({ onCreated }: Props) {
               </div>
             )}
 
-            {/* Step 3: Import button */}
+            {/* Step 3: Open button */}
             {importFile && (
               <button
                 onClick={handleImport}
                 disabled={loading || !password}
                 className="w-full bg-emerald-600 text-white py-2.5 rounded-lg text-sm font-medium hover:bg-emerald-700 disabled:opacity-50 transition-colors"
               >
-                {loading ? 'Importing...' : 'Import Database'}
+                {loading ? 'Opening...' : 'Open Database'}
               </button>
             )}
           </>

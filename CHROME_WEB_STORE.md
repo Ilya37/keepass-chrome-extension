@@ -16,32 +16,21 @@ zip -r ../../keepass-extension.zip .
 cd ../..
 ```
 
-### Этап 2: Создание скриншотов
+### Этап 2: Скриншоты
 
-Chrome Web Store требует скриншоты размерами **1280×800** или **640×400**. Нужно 2-5 скриншотов:
+Chrome Web Store требует скриншоты **1280×800** (или 640×400), от 2 до 5 штук. Готовые файлы лежат в `store-assets/screenshots/` (все 1280×800 PNG, загружать по порядку):
 
-**Скриншот 1: Разблокировка БД**
-- Показать popup с полем пароля
-- Кнопку "Unlock Database"
-- Текст: "Enter your master password"
+| # | Файл | Что показано |
+|---|------|--------------|
+| 1 | `01-private-by-design.png` | Экран Unlock. Заголовок «Your passwords. Your device. Nothing else.» — локальность, .kdbx, no network, open source |
+| 2 | `02-open-existing-kdbx.png` | Create Vault в режиме **Open Existing** с плашкой «Your file stays on this device» — ответ на страх «импорт = копия базы в интернете» |
+| 3 | `03-all-passwords.png` | Список записей с поиском, фильтром по тегам |
+| 4 | `04-autofill.png` | Макет окна браузера на github.com/login, popup с блоком «On this page: GitHub [Fill]» |
+| 5 | `05-generator.png` | Генератор паролей со strength meter |
 
-**Скриншот 2: Список паролей**
-- Popup с списком сохранённых паролей
-- Иконки категорий (e.g., 🌐 Websites, 📧 Email)
-- Поле поиска
+Снято с реального собранного расширения (`.output/chrome-mv3`) в Playwright-Chromium: демо-база «My Passwords» с 8 вымышленными записями (alex.morgan), пароли сгенерированы. Текст на кадрах описывает только реально существующие функции — экрана recovery codes в UI нет, поэтому отдельного скриншота под него нет.
 
-**Скриншот 3: Автозаполнение**
-- Показать браузер с формой login
-- Popup подсказывает пароль для сайта
-- "Auto-fill enabled" текст
-
-**Скриншот 4: Безопасность**
-- Текст: "All data stored locally. No cloud. No tracking."
-- Иконки: 🔐 Encrypted, 💾 Local Storage, 🔄 Auto-backup
-
-**Скриншот 5: Восстановление**
-- Recovery codes на экране
-- Текст: "20 one-time recovery codes for account recovery"
+> Google Chrome ≥ 137 игнорирует `--load-extension`, поэтому для пересъёмки нужен Chromium из Playwright (`npx playwright install chromium`), а не системный Chrome.
 
 ### Этап 3: Информация для Web Store
 
@@ -67,22 +56,21 @@ Secure password management for Chrome with local encryption. Zero cloud, zero tr
 
 FEATURES:
 ✓ Local encryption only - all passwords stay on your device
-✓ KeePass compatible - import existing .kdbx databases
-✓ Auto-fill passwords - seamless browsing experience
-✓ Dual storage backup - Chrome Storage + IndexedDB
-✓ Auto-unlock - encrypted tokens for fast access
-✓ Automatic snapshots - hourly backups + edit threshold
-✓ Recovery codes - 20 one-time codes for account recovery
-✓ Version history - restore from previous versions
-✓ Operation journal - full audit trail for forensics
+✓ KeePass compatible - open your existing .kdbx database (kept as an encrypted copy on your device only)
+✓ One-click Fill - open the extension on a login page, matching entries appear on top
+✓ Export anytime - download your database as a standard .kdbx file
+✓ Search and tags - find any login instantly, group entries by tag
+✓ Password generator - with live strength meter
+✓ Auto-lock after 15 minutes idle, clipboard auto-clears after 15 seconds
+✓ Redundant local storage - encrypted copy kept in both Chrome Storage and IndexedDB
 
 SECURITY:
-✓ PBKDF2 password hashing with SHA-256
+✓ Standard KeePass .kdbx encryption: AES-256 / ChaCha20, Argon2 or AES-KDF key derivation
 ✓ All data encrypted locally with KeePass format
 ✓ No plaintext passwords stored
 ✓ No remote backups or cloud sync
 ✓ No analytics or tracking
-✓ No permissions for external communication
+✓ Makes no network requests - verifiable in the open-source code
 
 PRIVACY:
 This extension is completely offline. Your passwords never leave your device.
@@ -91,12 +79,19 @@ This extension is completely offline. Your passwords never leave your device.
 - No advertising
 - Open source code available on GitHub
 
+WHAT HAPPENS TO YOUR .KDBX FILE:
+When you open an existing KeePass file, the extension keeps an encrypted copy
+of it in Chrome's extension storage on this computer. That copy is a standard
+encrypted .kdbx file protected by the same master password - it cannot be read
+without it. It is never uploaded, synced, or sent anywhere. Your original file is
+not modified; use Export to save changes back to a .kdbx file.
+
 USAGE:
-1. Create or import a KeePass database
-2. Set your master password
-3. Save your recovery codes (important!)
-4. Passwords auto-fill on compatible websites
-5. All data persists even after closing the browser
+1. Create a new KeePass database or open your existing .kdbx file
+2. Enter your master password
+3. On a login page, open the extension and click Fill
+4. Use Export to save your changes back to a .kdbx file
+5. Your encrypted database stays on this device, even after closing the browser
 
 PRIVACY POLICY:
 https://github.com/Ilya37/keepass-chrome-extension/blob/main/PRIVACY_POLICY.md

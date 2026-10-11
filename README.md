@@ -7,7 +7,7 @@ KeePass-compatible password manager as a Chrome extension. Runs entirely in the 
 ## Features
 
 - **Create and open `.kdbx` databases** — full KeePass 2.x compatibility
-- **Import/export** — open existing KeePass database or create a new one
+- **Open / export** — open an existing KeePass `.kdbx` file or create a new one; export your changes back to a `.kdbx` file at any time
 - **Password management** — add, edit, delete entries; fill in URL for autofill on sites
 - **Search** — quick search by title, login, URL and tags
 - **Tag breakdown** — switch list mode to "By tags" to browse entries grouped by tag
@@ -77,8 +77,16 @@ With `npm run dev`, the extension with hot reload will be in `.output/chrome-mv3
 ### First launch
 
 1. Click the extension icon in the Chrome toolbar
-2. Choose **Create New** to create a new database or **Import File** to open an existing `.kdbx` file
+2. Choose **Create New** to create a new database or **Open Existing** to open an existing `.kdbx` file
 3. Set a master password (at least 8 characters)
+
+### What happens when you open an existing `.kdbx` file
+
+- The extension reads the file you pick and keeps an **encrypted copy** of it in Chrome's extension storage (`chrome.storage.local` + IndexedDB) **on this device only**.
+- Nothing is uploaded. The extension makes no network requests — there is no server, sync, or cloud component.
+- The copy is a standard `.kdbx` file, still encrypted with your master password (AES-256 / ChaCha20, Argon2/AES-KDF key derivation). It is never stored decrypted; without the master password it is just as unreadable as the original.
+- Your original file is **not modified**. The extension does not keep a live link to it: edits you make in the extension go to the local copy, and you use **Export** (download icon in the header) to write them back to a `.kdbx` file.
+- "Forgot Password" → "Delete Vault and Start Over" on the Unlock screen, or uninstalling the extension, removes the local copy.
 
 ### Password management
 

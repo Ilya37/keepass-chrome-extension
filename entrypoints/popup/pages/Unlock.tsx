@@ -130,7 +130,7 @@ export function Unlock({ meta, onUnlocked }: Props) {
 
         <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2.5">
           <p className="text-xs text-red-700">
-            Forgot master password? You can delete this vault and create or import a new one.
+            Forgot master password? You can delete this vault and create a new one or open another .kdbx file.
           </p>
           {confirmReset && (
             <p className="mt-1 text-xs text-red-700">

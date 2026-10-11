@@ -29,7 +29,7 @@
 <body>
 
 <h1>Privacy Policy</h1>
-<p class="updated">Last updated: February 7, 2026</p>
+<p class="updated">Last updated: October 11, 2026</p>
 
 <h2>Overview</h2>
 <p>
@@ -60,6 +60,33 @@
     <strong>chrome.storage.session</strong> — stores the master password temporarily
     so the extension can re-open the database after a background service restart.
     This data is automatically <strong>cleared when you close the browser</strong>.
+  </li>
+</ul>
+
+<h2>Opening an Existing .kdbx File</h2>
+<p>
+  When you choose <strong>Open Existing</strong> and select a <code>.kdbx</code> file, here is
+  exactly what happens:
+</p>
+<ul>
+  <li>
+    The file is read on your device and an <strong>encrypted copy</strong> of it is stored in the
+    extension's local storage (see Data Storage above). The copy is a standard encrypted
+    <code>.kdbx</code> file protected by the same master password — it is never stored
+    decrypted and cannot be read without that password.
+  </li>
+  <li>
+    The file is <strong>not uploaded</strong>, synced, or transmitted anywhere. The extension has
+    no server and makes no network requests.
+  </li>
+  <li>
+    Your original file is <strong>not modified</strong>. The extension does not keep a live link
+    to it; changes you make are saved to the local copy, and you can use <strong>Export</strong>
+    to download them as a new <code>.kdbx</code> file.
+  </li>
+  <li>
+    You can remove the local copy at any time via "Forgot Password" → "Delete Vault and Start
+    Over" on the unlock screen, or by uninstalling the extension.
   </li>
 </ul>
 
